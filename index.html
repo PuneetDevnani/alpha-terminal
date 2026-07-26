@@ -4003,11 +4003,29 @@ function chainNodeHTML(idx, key, label, node, statusOverride){
   </button>`;
 }
 
+let challengeScrollTimer = null;
 function openChallengePhase(idx, phase){
-  if(openChallengeEditor && openChallengeEditor.idx===idx && openChallengeEditor.phase===phase){ openChallengeEditor=null; }
-  else { openChallengeEditor = {idx, phase}; }
+  if(challengeScrollTimer){ clearTimeout(challengeScrollTimer); challengeScrollTimer = null; }
+  if(openChallengeEditor && openChallengeEditor.idx===idx && openChallengeEditor.phase===phase){
+    closeChallengeEditor();
+    return;
+  }
+  openChallengeEditor = {idx, phase};
   renderChallenges();
-  setTimeout(()=>{ const el = document.getElementById('challengeEditorRow'); if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 30);
+  challengeScrollTimer = setTimeout(()=>{
+    challengeScrollTimer = null;
+    const el = document.getElementById('challengeEditorRow');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 30);
+}
+function closeChallengeEditor(){
+  // Cancel any smooth-scroll still in flight before the target row is removed —
+  // iOS Safari can leave page scrolling "stuck" if a scrollIntoView animation's
+  // target disappears mid-animation.
+  if(challengeScrollTimer){ clearTimeout(challengeScrollTimer); challengeScrollTimer = null; }
+  openChallengeEditor = null;
+  renderChallenges();
+  requestAnimationFrame(()=>{ window.scrollTo({top: window.scrollY, left: window.scrollX, behavior:'auto'}); });
 }
 
 function challengePhaseEditorHTML(ch, idx){
@@ -4027,7 +4045,7 @@ function challengePhaseEditorHTML(ch, idx){
         </div>
         <div class="field"><label>Amount ($)</label><input type="number" step="any" id="cpAmount"></div>
       </div>
-      <div class="form-actions"><button class="btn ghost" onclick="openChallengeEditor=null;renderChallenges();">Close</button><button class="btn" onclick="addChallengePayout(${idx})">+ Add Payout</button></div>
+      <div class="form-actions"><button class="btn ghost" onclick="closeChallengeEditor()">Close</button><button class="btn" onclick="addChallengePayout(${idx})">+ Add Payout</button></div>
     </div>`;
   }
   const node = ch[phase];
@@ -4041,7 +4059,7 @@ function challengePhaseEditorHTML(ch, idx){
       <div class="field"><label>Breached Date</label><input type="text" class="dmy-date" id="ceBreach" value="${fmtDate(node.breach)||''}" placeholder="dd/mm/yyyy" maxlength="10" inputmode="numeric"></div>
     </div>
     <p style="font-size:11px;color:var(--text-low);margin-top:2px;">Fill only one of Cleared / Breached — whichever actually happened. Leave both blank while still active. Typing an existing Account ID and clicking "Pull Start Date" will copy its start date in from the Accounts tab.</p>
-    <div class="form-actions"><button class="btn ghost" onclick="pullStartFromAccount()">↧ Pull Start Date from Account</button><button class="btn ghost" onclick="openChallengeEditor=null;renderChallenges();">Close</button><button class="btn" onclick="saveChallengePhase(${idx},'${phase}')">Save</button></div>
+    <div class="form-actions"><button class="btn ghost" onclick="pullStartFromAccount()">↧ Pull Start Date from Account</button><button class="btn ghost" onclick="closeChallengeEditor()">Close</button><button class="btn" onclick="saveChallengePhase(${idx},'${phase}')">Save</button></div>
   </div>`;
 }
 function pullStartFromAccount(){
@@ -4064,8 +4082,7 @@ async function saveChallengePhase(idx, phase){
   if(phase==='phase1' && clear && ch.twoStep && !ch.phase2.start) ch.phase2.start = clear;
   if(phase==='phase2' && clear && !ch.funded.start) ch.funded.start = clear;
   await persistChallenges();
-  openChallengeEditor = null;
-  renderChallenges();
+  closeChallengeEditor();
 }
 async function addChallengePayout(idx){
   const date = parseDMY(document.getElementById('cpDate').value);
