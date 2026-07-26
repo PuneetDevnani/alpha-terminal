@@ -63,18 +63,29 @@ html[data-theme="dark"] .btn{color:#191108;}
 html[data-theme="dark"] ::selection{color:#191108;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
+html{overflow-x:hidden;}
 body{
+  overflow-x:hidden;
   background:
     radial-gradient(ellipse 900px 500px at 15% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent),
     var(--bg-void);
   color:var(--text-hi);font-family:var(--font-body);-webkit-font-smoothing:antialiased;
 }
+.table-scroll,.modal-overlay,#coachChatLog{-webkit-overflow-scrolling:touch;}
 ::selection{background:var(--accent);color:#0A0D11;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 input,select,textarea{font-family:inherit;}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .stat-card .val, td, .acct-bal, .acct-profit{font-variant-numeric:tabular-nums;}
+.mobile-cloud-status{display:none;font-size:11px;color:var(--text-mid);padding:5px 10px;border-radius:20px;background:var(--bg-panel-2);border:1px solid var(--border-soft);white-space:nowrap;flex-shrink:0;}
+.mobile-account-menu{display:none;position:fixed;bottom:64px;right:10px;background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:12px;box-shadow:var(--shadow-md);padding:8px;z-index:60;min-width:190px;}
+.mobile-account-menu.open{display:block;}
+.mam-email{font-size:11px;color:var(--text-mid);padding:6px 8px 10px;border-bottom:1px solid var(--border-soft);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mam-item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;text-align:left;padding:9px 8px;font-size:12.5px;font-weight:600;color:var(--text-hi);border-radius:8px;min-height:38px;}
+.mam-item:active,.mam-item:hover{background:var(--bg-panel-2);}
+.mobile-account-backdrop{display:none;position:fixed;inset:0;z-index:59;}
+.mobile-account-backdrop.open{display:block;}
 @media (prefers-reduced-motion:reduce){ *{animation-duration:0.001ms !important;transition-duration:0.001ms !important;} }
 
 .app{display:flex;min-height:100vh;}
@@ -103,9 +114,9 @@ input,select,textarea{font-family:inherit;}
 .session-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--text-low);}
 .session-pill.live .dot{background:var(--profit);box-shadow:0 0 6px var(--profit);}
 .session-pill.live{color:var(--text-hi);border-color:color-mix(in srgb, var(--profit) 35%, transparent);}
-#tv-ticker-tape{border-radius:10px;overflow:hidden;border:1px solid var(--border-soft);}
+#tv-ticker-tape{border-radius:10px;overflow:hidden;border:1px solid var(--border-soft);margin-top:12px;}
 
-.content{padding:22px 26px 100px;flex:1;}
+.content{padding:22px 26px 100px;flex:1;min-width:0;}
 .section{display:none;}
 .section.active{display:block;animation:fadein .25s ease;}
 @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
@@ -132,16 +143,17 @@ input,select,textarea{font-family:inherit;}
 .clock-status.closed{background:var(--bg-sunken);color:var(--text-low);}
 .flip-time{font-family:var(--font-mono);font-size:30px;font-weight:700;letter-spacing:0.01em;color:var(--text-hi);}
 .flip-time span.sec{font-size:17px;color:var(--text-low);}
-.clock-meta{display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--text-mid);font-family:var(--font-mono);}
+.clock-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;margin-top:10px;font-size:11px;color:var(--text-mid);font-family:var(--font-mono);}
 
 /* mission control */
 .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:22px;}
 .panel{background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;}
 .panel h3{font-family:var(--font-display);font-size:13.5px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.field{display:flex;flex-direction:column;gap:4px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0;}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0;}
 .field label{font-size:10.5px;color:var(--text-low);text-transform:uppercase;letter-spacing:0.05em;}
-.field input,.field select{background:var(--bg-panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text-hi);padding:8px 10px;font-size:13px;font-family:var(--font-mono);}
+.field input,.field select,.field textarea{background:var(--bg-panel-2);border:1px solid var(--border);border-radius:10px;color:var(--text-hi);padding:8px 10px;font-size:13px;font-family:var(--font-mono);width:100%;min-width:0;max-width:100%;box-sizing:border-box;}
+.field select{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2393968F' stroke-width='1.6'><path d='M5.5 8l4.5 4.5L14.5 8'/></svg>");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;padding-right:30px;}
 .field input:focus,.field select:focus{outline:none;border-color:var(--accent);}
 .checklist{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
 .check-row{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-mid);cursor:pointer;}
@@ -185,9 +197,9 @@ tr:hover td{background:var(--bg-panel-2);}
 .empty-state{padding:40px 20px;text-align:center;color:var(--text-low);font-size:13px;}
 
 /* form */
-.form-panel{background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:14px;display:none;}
+.form-panel{background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:14px;display:none;min-width:0;max-width:100%;}
 .form-panel.open{display:block;}
-.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;min-width:0;}
 .form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
 
 /* accounts */
@@ -307,23 +319,47 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
 }
 @media (max-width:920px){
   .sidebar{display:none;}
-  .content{padding:16px 14px 90px;}
+  .content{padding:16px 14px calc(84px + env(safe-area-inset-bottom));}
   .topbar{padding:14px 16px 10px;}
-  .clock-board{grid-template-columns:1fr;}
+  .clock-board{grid-template-columns:repeat(2,1fr);}
   .grid-2{grid-template-columns:1fr;}
   .stat-row{grid-template-columns:repeat(2,1fr);}
   .form-grid{grid-template-columns:repeat(2,1fr);}
   .acct-grid{grid-template-columns:1fr;}
   .greeting h1{font-size:19px;}
+  .field-time{grid-column:1/-1;}
+  .mobile-cloud-status{display:inline-flex;}
   .mobile-tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--bg-panel);border-top:1px solid var(--border-soft);padding:8px 4px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;z-index:50;box-shadow:0 -2px 8px rgba(16,24,40,0.06);overflow-x:auto;}
-  .mtab{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-low);font-size:9px;padding:4px 7px;flex-shrink:0;}
+  .mtab,.mtab-more{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--text-low);font-size:9px;padding:6px 7px;min-width:44px;min-height:44px;flex-shrink:0;}
   .mtab.active{color:var(--accent-hi);}
-  .mtab .ico{font-size:15px;}
+  .mtab .ico,.mtab-more .ico{font-size:16px;}
+  .mtab-more.open{color:var(--accent-hi);}
+
+  /* prevent iOS Safari auto-zoom-on-focus: any input/select/textarea must be >=16px */
+  .field input,.field select,.field textarea,
+  input,select,textarea{font-size:16px !important;}
+  .coach-chat-inputrow input{font-size:16px !important;padding:12px 14px;}
+  #chartSymbolInput{width:100% !important;max-width:100%;}
+
+  /* modals: don't push content oddly down, and clear the bottom tabbar */
+  .modal-overlay{padding:16px 12px calc(16px + env(safe-area-inset-bottom) + 76px);align-items:flex-start;}
+  .modal-panel{padding:16px;max-width:100%;margin-bottom:0;}
+  .sd-btn-row{flex-direction:column;align-items:stretch;}
+  .sd-btn-row .btn{width:100%;text-align:center;}
 }
 @media (max-width:560px){
   .stat-row{grid-template-columns:repeat(2,1fr);}
   .form-grid{grid-template-columns:1fr 1fr;}
   .cal-cell{min-height:56px;font-size:9.5px;}
+}
+@media (max-width:400px){
+  .stat-row{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  .field-grid{grid-template-columns:1fr;}
+  .cal-cell{min-height:44px;font-size:8.5px;padding:4px 5px;}
+  .greeting h1{font-size:17px;}
+  .kpi-grid{grid-template-columns:1fr !important;}
+  .mtab{font-size:8px;padding:5px 5px;}
 }
 .scroll-hide::-webkit-scrollbar{height:6px;}
 .scroll-hide::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
@@ -420,7 +456,10 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
           <h1 id="greetingText">Good evening, Trader</h1>
           <p id="dateText">—</p>
         </div>
-        <div class="session-pill-row" id="pillRow"></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+          <div class="mobile-cloud-status" id="storageIndicatorMobile"></div>
+          <div class="session-pill-row" id="pillRow"></div>
+        </div>
       </div>
       <div id="tv-ticker-tape"></div>
     </div>
@@ -516,14 +555,15 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
             <div class="field"><label>Symbol</label><input id="fSymbol" list="symbolWatchlist" placeholder="Select or type a symbol"></div>
             <datalist id="symbolWatchlist"></datalist>
             <div class="field"><label>Date</label><input id="fDate" type="text" class="dmy-date" placeholder="dd/mm/yyyy" maxlength="10" inputmode="numeric"></div>
-            <div class="field"><label>Entry Time (UTC)</label><input id="fTime" type="time"></div>
-            <div class="field"><label>Exit Time (UTC)</label><input id="fExitTime" type="time"></div>
+            <div class="field field-time"><label>Entry Time (UTC)</label><input id="fTime" type="time"></div>
+            <div class="field field-time"><label>Exit Time (UTC)</label><input id="fExitTime" type="time"></div>
             <div class="field"><label>Direction</label><select id="fDir"><option>Long</option><option>Short</option></select></div>
             <div class="field"><label>Entry</label><input id="fEntry" type="number" step="any"></div>
             <div class="field"><label>Stop Loss</label><input id="fSL" type="number" step="any"></div>
             <div class="field"><label>Take Profit</label><input id="fTP" type="number" step="any"></div>
             <div class="field"><label>Lot Size</label><input id="fLot" type="number" step="any"></div>
-            <div class="field"><label>Strategy</label><input id="fStrategy" placeholder="e.g. Breakout"></div>
+            <div class="field"><label>Strategy</label><input id="fStrategy" list="strategyNamesList" placeholder="e.g. Breakout — pick existing or type new" autocomplete="off"></div>
+            <datalist id="strategyNamesList"></datalist>
             <div class="field"><label>Result P&L ($)</label><input id="fProfit" type="number" step="any" placeholder="blank = open"></div>
             <div class="field"><label>Trade Status</label>
               <select id="fLifecycle"><option>Planning</option><option>Waiting</option><option>Triggered</option><option>Managing</option><option selected>Closed</option><option>Reviewed</option></select>
@@ -563,11 +603,11 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
           <p style="font-size:11.5px;color:var(--text-low);margin-bottom:10px;line-height:1.6;">
             Paste rows copied from your broker/prop-firm trade history or an MT5 statement. Expected columns, tab-separated (this matches Goat Funded Trader's Trading History table):<br>
             <code style="background:var(--bg-sunken);padding:2px 6px;border-radius:4px;">Ticket · Open Time (UTC) · Open Price · Close Time (UTC) · Close Price · Side · Symbol · Volume · Profit</code><br>
-            Times are read as UTC and converted to IST automatically. Skip the header row or leave it in — it's ignored either way. Re-pasting a statement with overlapping dates is safe — trades with a ticket number already logged for this account are automatically skipped, not double-counted.
+            Skip the header row or leave it in — it's ignored either way. Re-pasting a statement with overlapping dates is safe — trades with a ticket number already logged for this account are automatically skipped, not double-counted.
           </p>
-          <div class="form-grid" style="margin-bottom:10px;">
+          <div class="form-grid" style="margin-bottom:10px;align-items:end;">
             <div class="field"><label>Assign to Account (optional)</label><select id="bulkAccount"><option value="">— none —</option></select></div>
-            <div class="field"><label>Tag Strategy (optional)</label><input id="bulkStrategy" placeholder="e.g. London Breakout"></div>
+            <div class="field"><label>Tag Strategy (optional)</label><input id="bulkStrategy" list="strategyNamesList" placeholder="e.g. London Breakout" autocomplete="off"></div>
           </div>
           <textarea id="bulkImportText" placeholder="114210532&#9;16 Jul'26 - 11.12 AM&#9;4030.09&#9;16 Jul'26 - 12.07 PM&#9;4023.27&#9;Buy&#9;XAUUSD.x&#9;0.03&#9;-20.46" style="width:100%;min-height:100px;background:var(--bg-panel-2);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-hi);resize:vertical;"></textarea>
           <div class="form-actions"><button class="btn" id="bulkImportBtn">Parse & Add Trades</button></div>
@@ -751,8 +791,6 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
             <button class="btn" id="newChallengeBtn">+ Add Purchase</button>
           </div>
         </div>
-        <p style="font-size:11.5px;color:var(--text-low);margin-top:-8px;margin-bottom:14px;">Every evaluation account you've ever bought, one card per challenge. Click a Phase 1 / Phase 2 / Funded block inside a card to open that stage and log its account ID plus start, clear, or breach date. Passing a phase links forward into the next one, like a chain — right through to payouts. Already have accounts in the Accounts tab? Use "Import from Accounts" to bring them in (auto-slotted by their Phase field). If Phase 1 and Phase 2 land as two separate cards because they're two different account numbers, click "🔗 Merge" on one of them to combine into a single challenge.</p>
-
         <div class="stat-row" id="challengeStats"></div>
         <datalist id="acctIdList"></datalist>
 
@@ -919,17 +957,15 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
 
       <!-- STRATEGY FOLDER (detail modal) -->
       <div class="modal-overlay" id="strategyDetailOverlay" style="display:none;">
-        <div class="modal-panel">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-            <div>
-              <div class="section-title" style="margin-bottom:2px;"><span class="left" id="sdName"></span></div>
-              <div id="sdMeta" style="font-size:11.5px;color:var(--text-mid);"></div>
-            </div>
-            <div style="display:flex;gap:8px;flex-shrink:0;">
-              <button class="btn ghost" id="sdEditDetailsBtn">✎ Edit Details</button>
-              <button class="btn ghost" id="sdExportPdfBtn">🖨 Export PDF</button>
-              <button class="btn ghost" onclick="closeStrategyDetail()">✕ Close</button>
-            </div>
+        <div class="modal-panel" style="position:relative;">
+          <button class="btn ghost" onclick="closeStrategyDetail()" title="Close" style="position:absolute;top:14px;right:14px;padding:6px 10px;z-index:2;">✕</button>
+          <div style="padding-right:44px;">
+            <div class="section-title" style="margin-bottom:2px;display:block;"><span class="left" id="sdName" style="display:block;white-space:normal;overflow-wrap:break-word;"></span></div>
+            <div id="sdMeta" style="font-size:11.5px;color:var(--text-mid);"></div>
+          </div>
+          <div class="sd-btn-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            <button class="btn ghost" id="sdEditDetailsBtn">✎ Edit Details</button>
+            <button class="btn ghost" id="sdExportPdfBtn">🖨 Export PDF</button>
           </div>
           <div class="form-panel" id="sdEditForm">
             <div class="form-grid">
@@ -1037,7 +1073,10 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
   <button class="mtab" data-tab="strategies"><span class="ico">☰</span>Strat</button>
   <button class="mtab" data-tab="notes"><span class="ico">✐</span>Notes</button>
   <button class="mtab" data-tab="market"><span class="ico">◎</span>Market</button>
+  <button class="mtab-more" id="mobileAccountBtn" onclick="toggleMobileAccountMenu(event)"><span class="ico">⚙</span>Account</button>
 </nav>
+<div class="mobile-account-backdrop" id="mobileAccountBackdrop" onclick="closeMobileAccountMenu()"></div>
+<div class="mobile-account-menu" id="mobileAccountMenu"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
@@ -1220,12 +1259,12 @@ function bootAppIfNeeded(){
   __appBooted = true;
   initTheme();
   buildClockBoard();
+  loadTickerTape();
   updateGreeting();
   updateClocks();
   setInterval(updateClocks,1000);
   setInterval(updateGreeting,60000);
   setInterval(updateDailyQuote,60000);
-  loadTickerTape();
   initMissionControl();
   loadData();
   attachAllDMYMasks();
@@ -1357,20 +1396,58 @@ async function sSet(key,value){
   updateStorageIndicator();
 }
 function updateStorageIndicator(){
-  const el = document.getElementById('storageIndicator');
-  if(!el) return;
   const now = new Date().toLocaleTimeString();
-  let statusHtml;
-  if(storageBackend==='cloud') statusHtml = `🟢 Synced to cloud · ${now}`;
-  else if(storageBackend==='cloud-offline') statusHtml = `🟡 Cloud offline — saved locally · ${now}`;
-  else if(storageBackend==='claude') statusHtml = `🟢 Synced to Claude · ${now}`;
-  else if(storageBackend==='indexeddb') statusHtml = `🟢 Saved locally in this browser · ${now}`;
-  else if(storageBackend==='memory') statusHtml = `🔴 Not persisting — data will be lost on reload`;
-  else statusHtml = `Checking storage…`;
-  const accountLine = cloudUser
-    ? `<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;">${cloudUser.email}</span><span><button onclick="cloudLogout()" style="background:none;border:none;color:var(--accent-hi);cursor:pointer;font-size:10px;padding:0;margin-right:10px;">Log out</button><button onclick="openCloudAccountModal()" title="Cloud account settings" style="background:none;border:none;color:var(--text-low);cursor:pointer;font-size:12px;padding:0;">⚙</button></span></div>`
-    : `<div style="margin-top:6px;"><button onclick="openCloudGate()" style="background:none;border:none;color:var(--accent-hi);cursor:pointer;font-size:10px;padding:0;">☁ Connect cloud sync</button></div>`;
-  el.innerHTML = statusHtml + accountLine;
+  let statusHtml, statusShort;
+  if(storageBackend==='cloud'){ statusHtml = `🟢 Synced to cloud · ${now}`; statusShort = `🟢 Synced`; }
+  else if(storageBackend==='cloud-offline'){ statusHtml = `🟡 Cloud offline — saved locally · ${now}`; statusShort = `🟡 Offline`; }
+  else if(storageBackend==='claude'){ statusHtml = `🟢 Synced to Claude · ${now}`; statusShort = `🟢 Synced`; }
+  else if(storageBackend==='indexeddb'){ statusHtml = `🟢 Saved locally in this browser · ${now}`; statusShort = `🟢 Local`; }
+  else if(storageBackend==='memory'){ statusHtml = `🔴 Not persisting — data will be lost on reload`; statusShort = `🔴 Not saved`; }
+  else { statusHtml = `Checking storage…`; statusShort = `…`; }
+
+  const el = document.getElementById('storageIndicator');
+  if(el){
+    const accountLine = cloudUser
+      ? `<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">${cloudUser.email}</span><span style="display:flex;align-items:center;gap:12px;flex-shrink:0;"><button onclick="cloudLogout()" style="background:none;border:none;color:var(--accent-hi);cursor:pointer;font-size:12px;font-weight:600;padding:4px 2px;">Log out</button><button onclick="openCloudAccountModal()" title="Cloud account settings" style="background:none;border:none;color:var(--text-low);cursor:pointer;font-size:15px;padding:4px 2px;">⚙</button></span></div>`
+      : `<div style="margin-top:6px;"><button onclick="openCloudGate()" style="background:none;border:none;color:var(--accent-hi);cursor:pointer;font-size:12px;font-weight:600;padding:4px 2px;">☁ Connect cloud sync</button></div>`;
+    el.innerHTML = statusHtml + accountLine;
+  }
+
+  const elMobile = document.getElementById('storageIndicatorMobile');
+  if(elMobile) elMobile.textContent = statusShort;
+
+  renderMobileAccountMenu();
+}
+function renderMobileAccountMenu(){
+  const menu = document.getElementById('mobileAccountMenu');
+  if(!menu) return;
+  if(cloudUser){
+    menu.innerHTML = `<div class="mam-email">${cloudUser.email}</div>
+      <button class="mam-item" onclick="closeMobileAccountMenu();cloudLogout();">↪ Log out</button>
+      <button class="mam-item" style="color:var(--loss);" onclick="closeMobileAccountMenu();openCloudAccountModal();">🗑 Wipe my data</button>`;
+  }else{
+    menu.innerHTML = `<div class="mam-email">Not connected</div>
+      <button class="mam-item" onclick="closeMobileAccountMenu();openCloudGate();">☁ Connect cloud sync</button>`;
+  }
+}
+function toggleMobileAccountMenu(ev){
+  if(ev) ev.stopPropagation();
+  const menu = document.getElementById('mobileAccountMenu');
+  const backdrop = document.getElementById('mobileAccountBackdrop');
+  const btn = document.getElementById('mobileAccountBtn');
+  if(!menu) return;
+  const open = !menu.classList.contains('open');
+  menu.classList.toggle('open', open);
+  if(backdrop) backdrop.classList.toggle('open', open);
+  if(btn) btn.classList.toggle('open', open);
+}
+function closeMobileAccountMenu(){
+  const menu = document.getElementById('mobileAccountMenu');
+  const backdrop = document.getElementById('mobileAccountBackdrop');
+  const btn = document.getElementById('mobileAccountBtn');
+  if(menu) menu.classList.remove('open');
+  if(backdrop) backdrop.classList.remove('open');
+  if(btn) btn.classList.remove('open');
 }
 
 /* ============================================================ NAV ============================================================ */
@@ -1430,8 +1507,8 @@ const CITIES = [
 ];
 function fmtISTclock(mins){ mins=((mins%1440)+1440)%1440; const h=Math.floor(mins/60), m=mins%60; return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
 function istWindowLabel(openUTC, closeUTC){
-  const openIST = openUTC*60+330, closeIST = closeUTC*60+330;
-  const wraps = closeUTC <= openUTC; // session crosses midnight UTC
+  const openIST = ((openUTC*60+330)%1440+1440)%1440, closeIST = ((closeUTC*60+330)%1440+1440)%1440;
+  const wraps = closeIST <= openIST; // does the *displayed* IST close time fall before the IST open time
   return `${fmtISTclock(openIST)}–${fmtISTclock(closeIST)} IST${wraps?' (+1d)':''}`;
 }
 function buildClockBoard(){
@@ -1468,6 +1545,7 @@ function updateClocks(){
 /* ============================================================ TRADINGVIEW ============================================================ */
 function loadTickerTape(){
   const container = document.getElementById('tv-ticker-tape');
+  if(!container) return;
   container.innerHTML = '';
   const script = document.createElement('script');
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
@@ -2260,6 +2338,7 @@ async function loadData(){
   if(challengeIdsBackfilled) await persistChallenges();
   await syncChallengePayoutsWithTransactions();
   await loadStrategiesLib();
+  refreshStrategyDatalist();
   updateStorageIndicator();
   refreshAccountDatalists();
   renderJournalTable('journalTableHost', trades, true);
@@ -2519,6 +2598,8 @@ document.getElementById('bulkImportBtn').addEventListener('click', async ()=>{
   // before this field existed, so old data is still protected.
   const {added, skipped, duplicates} = parseAndAddStatementLines(lines, account, strategy);
   if(added>0){ await persistTrades(); refreshAll(); }
+  if(strategy && ensureStrategyFolder(strategy)){ await persistStrategiesLib(); renderStrategies(); }
+  refreshStrategyDatalist();
   const msgParts = [`Imported ${added} trade(s).`];
   if(duplicates) msgParts.push(`Skipped ${duplicates} duplicate ticket(s) that already exist for this account — no double-counting.`);
   if(skipped) msgParts.push(`Skipped ${skipped} line(s) that didn't match the expected format.`);
@@ -2536,6 +2617,8 @@ document.getElementById('csvFileInput').addEventListener('change', async (e)=>{
   const strategy = document.getElementById('bulkStrategy').value;
   const {added, skipped, duplicates} = parseAndAddStatementLines(lines, account, strategy);
   if(added>0){ await persistTrades(); refreshAll(); }
+  if(strategy && ensureStrategyFolder(strategy)){ await persistStrategiesLib(); renderStrategies(); }
+  refreshStrategyDatalist();
   const msgParts = [`Imported ${added} trade(s) from ${file.name}.`];
   if(duplicates) msgParts.push(`Skipped ${duplicates} duplicate ticket(s) already in your Journal.`);
   if(skipped) msgParts.push(`Skipped ${skipped} line(s) that didn't match the expected format (Ticket · Open Time · Open Price · Close Time · Close Price · Side · Symbol · Volume · Profit).`);
@@ -2623,6 +2706,8 @@ document.getElementById('saveTradeBtn').addEventListener('click', async ()=>{
   if(!t.symbol || !t.date){ alert('Please fill at least Date and Symbol.'); saveBtn.textContent = wasEditing?'Update Trade':'Save Trade'; saveBtn.disabled=false; return; }
   if(wasEditing){ trades[editingTradeIndex] = t; } else { trades.push(t); }
   await persistTrades(); refreshAll();
+  if(t.strategy && ensureStrategyFolder(t.strategy)){ await persistStrategiesLib(); renderStrategies(); }
+  refreshStrategyDatalist();
   tradeForm.classList.remove('open');
   resetTradeFormChrome();
   saveBtn.disabled = false;
@@ -3403,7 +3488,6 @@ function renderCalendarGrid(hostGridId, hostLabelId, hostStatsId, hostListId, ac
       cells += `<div class="cal-cell ${cls}" onclick="showCalDay('${dateStr}','${hostListId}','${accFilter||''}')">
         <div class="cal-date">${d}</div>
         <div class="cal-pnl ${st.totalPnl>=0?'pos':'neg'}">${st.totalPnl>=0?'+':''}$${st.totalPnl.toFixed(0)}</div>
-        <div class="cal-trades">${dayTrades.length} trades · ${st.winRate.toFixed(0)}% WR</div>
       </div>`;
     }
   }
@@ -3550,7 +3634,7 @@ function acctCardHTML(a, idx){
     return `<div class="acct-card" onclick="openAccountDetail(${idx})">
       <button class="acct-edit" onclick="editAccount(${idx}, event)">✎</button>
       <button class="acct-del" onclick="deleteAccount(${idx}, event)">✕</button>
-      <div class="acct-top"><div><div class="acct-name">${a.name}</div><div class="acct-broker">${a.broker||'—'}</div></div><div class="acct-status" style="background:var(--accent-dim);color:var(--accent-hi);">Broker</div></div>
+      <div class="acct-top" style="padding-right:58px;"><div><div class="acct-name">${a.name}</div><div class="acct-broker">${a.broker||'—'}</div></div><div class="acct-status" style="background:var(--accent-dim);color:var(--accent-hi);">Broker</div></div>
       <div class="acct-bal">$${a.balance.toLocaleString()}</div>
       <div class="acct-profit ${profit>=0?'val pos':'val neg'}">${profit>=0?'+':''}$${profit.toFixed(2)} (${profitPct.toFixed(2)}%)</div>
       <div class="acct-mini" style="margin-top:12px;"><span>Net Deposited $${netTxn.toFixed(0)}</span><span>${a.status}</span></div>
@@ -3571,7 +3655,7 @@ function acctCardHTML(a, idx){
   return `<div class="acct-card" onclick="openAccountDetail(${idx})">
     <button class="acct-edit" onclick="editAccount(${idx}, event)">✎</button>
     <button class="acct-del" onclick="deleteAccount(${idx}, event)">✕</button>
-    <div class="acct-top"><div><div class="acct-name">${a.name}</div><div class="acct-broker">${a.broker||'—'}</div></div>${statusBadge}</div>
+    <div class="acct-top" style="padding-right:58px;"><div><div class="acct-name">${a.name}</div><div class="acct-broker">${a.broker||'—'}</div></div>${statusBadge}</div>
     <div class="acct-bal">$${a.balance.toLocaleString()}</div>
     <div class="acct-profit ${profit>=0?'val pos':'val neg'}">${profit>=0?'+':''}$${profit.toFixed(2)} (${profitPct.toFixed(2)}%)</div>
     <div class="progress-label"><span>Target Progress</span><span>${targetProgress.toFixed(0)}%</span></div>
@@ -4093,7 +4177,7 @@ function challengeCardHTML(ch, idx){
   return `<div class="acct-card" style="cursor:default;padding-left:${challengeBulkMode?'40px':'16px'};">
     ${checkbox}
     <button class="acct-del" onclick="deleteChallenge(${idx})" title="Delete this purchase">✕</button>
-    <div class="acct-top" style="margin-bottom:2px;">
+    <div class="acct-top" style="margin-bottom:2px;padding-right:34px;">
       <div><div class="acct-name">${ch.firm||'Challenge'}${sizeLabel}</div><div class="acct-broker">${ch.buyDate?'Bought '+fmtDate(ch.buyDate):'No buy date'}${ch.price?' · $'+(+ch.price).toLocaleString()+' paid':''}</div></div>
       <div class="acct-status" style="${statusStyle}">${st.label}</div>
     </div>
@@ -4632,6 +4716,29 @@ async function loadStrategiesLib(){
 }
 async function persistStrategiesLib(){ await sSet('strategies_lib', strategiesLib); }
 
+/* Two-way sync between trade "Strategy" tags and the Strategy Center library:
+   - ensureStrategyFolder() creates a real library folder the first time a name is used
+     (on the trade form or bulk import), so it shows up in Strategy Center immediately.
+   - refreshStrategyDatalist() keeps the shared <datalist> (used by both the Journal
+     Strategy field and the Bulk Import "Tag Strategy" field, on desktop and mobile alike,
+     since it's the same markup for both layouts) in sync with every known strategy name. */
+function ensureStrategyFolder(name){
+  name = (name||'').trim();
+  if(!name) return false;
+  const exists = strategiesLib.some(s=>(s.name||'').trim().toLowerCase()===name.toLowerCase());
+  if(exists) return false;
+  strategiesLib.push({ name, expectedRR:'', session:'', rules:'', img:null, createdAt:new Date().toISOString().slice(0,10), linkedTradeIds:[], entries:[], tags:[], mastery:null });
+  return true;
+}
+function refreshStrategyDatalist(){
+  const el = document.getElementById('strategyNamesList');
+  if(!el) return;
+  const names = new Set();
+  strategiesLib.forEach(s=>{ if(s.name) names.add(s.name.trim()); });
+  trades.forEach(t=>{ if(t.strategy) names.add(t.strategy.trim()); });
+  el.innerHTML = [...names].filter(Boolean).sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${n.replace(/"/g,'&quot;')}"></option>`).join('');
+}
+
 const strategyForm = document.getElementById('strategyForm');
 document.getElementById('newStrategyBtn').addEventListener('click', ()=> strategyForm.classList.add('open'));
 document.getElementById('cancelStrategyBtn').addEventListener('click', ()=> strategyForm.classList.remove('open'));
@@ -4651,12 +4758,13 @@ document.getElementById('saveStrategyBtn').addEventListener('click', async ()=>{
   });
   await persistStrategiesLib();
   renderStrategies();
+  refreshStrategyDatalist();
   strategyForm.classList.remove('open');
   btn.textContent='Save Strategy'; btn.disabled=false;
   ['sName','sExpectedRR','sRules','sTags','sMastery'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sImage').value='';
 });
-async function deleteStrategyLib(idx, ev){ if(ev) ev.stopPropagation(); strategiesLib.splice(idx,1); await persistStrategiesLib(); renderStrategies(); }
+async function deleteStrategyLib(idx, ev){ if(ev) ev.stopPropagation(); strategiesLib.splice(idx,1); await persistStrategiesLib(); renderStrategies(); refreshStrategyDatalist(); }
 
 let renderedStrategiesCache = [];
 let activeStrategyTagFilter = '';
@@ -4793,6 +4901,7 @@ document.getElementById('sdSaveEditBtn').addEventListener('click', async ()=>{
     if(tradesChanged) await persistTrades();
   }
   await persistStrategiesLib();
+  refreshStrategyDatalist();
   document.getElementById('sdEditForm').classList.remove('open');
   btn.textContent = 'Save Changes'; btn.disabled = false;
   renderStrategyDetail();
