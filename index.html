@@ -878,6 +878,18 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
             <div class="field" id="mCustomField" style="display:none;"><label>Custom Type Name</label><input id="mCustomType" placeholder="e.g. Chased a breakout"></div>
             <div class="field"><label>Money Lost ($)</label><input id="mMoneyLost" type="number" step="any" placeholder="optional"></div>
             <div class="field"><label>Related Account</label><input id="mAccount" list="accountList2" placeholder="optional"></div>
+            <div class="field" style="grid-column:1/-1">
+              <label>Related Trade (optional)</label>
+              <div id="mLinkedTradeChip" style="display:none;"></div>
+              <button type="button" class="btn ghost" id="mLinkTradeBtn" style="width:100%;">+ Link Trade from Journal</button>
+              <div id="mLinkPicker" style="display:none;margin-top:8px;">
+                <select id="mLinkSelect" style="margin-bottom:8px;"></select>
+                <div style="display:flex;gap:8px;">
+                  <button type="button" class="btn ghost" id="mCancelLinkBtn" style="flex:1;">Cancel</button>
+                  <button type="button" class="btn" id="mConfirmLinkBtn" style="flex:1;">Confirm</button>
+                </div>
+              </div>
+            </div>
             <div class="field" style="grid-column:1/-1"><label>Notes</label><input id="mNotes" placeholder="What happened?"></div>
           </div>
           <div class="form-actions"><button class="btn ghost" id="cancelMistakeBtn">Cancel</button><button class="btn" id="saveMistakeBtn">Save</button></div>
@@ -1566,7 +1578,7 @@ function loadMarketWidgets(){
   s1.async = true;
   s1.innerHTML = JSON.stringify({
     colorTheme:'light', dateRange:'12M', showChart:false, locale:'en', isTransparent:true, width:'100%', height:'400',
-    tabs:[{title:'Forex',symbols:[{s:'OANDA:EURUSD'},{s:'OANDA:GBPUSD'},{s:'OANDA:USDJPY'},{s:'OANDA:XAUUSD'},{s:'OANDA:XAGUSD'}]},
+    tabs:[{title:'Forex',symbols:[{s:'OANDA:XAUUSD'},{s:'OANDA:XAGUSD'},{s:'OANDA:EURUSD'},{s:'OANDA:GBPUSD'},{s:'OANDA:USDJPY'}]},
           {title:'Indices',symbols:[{s:'OANDA:NAS100USD'},{s:'OANDA:US30USD'},{s:'OANDA:SPX500USD'}]},
           {title:'Crypto',symbols:[{s:'BITSTAMP:BTCUSD'},{s:'BITSTAMP:ETHUSD'}]}]
   });
@@ -2923,9 +2935,6 @@ function renderKPIGrid(containerId, s){
     statCardHTML('Losing Streak', s.maxL),
     statCardHTML('Largest Win','$'+s.best.toFixed(2),'pos'),
     statCardHTML('Largest Loss','$'+s.worst.toFixed(2),'neg'),
-    statCardHTML('Avg Execution Score', s.avgExecScore!==null ? s.avgExecScore.toFixed(1)+'/10' : '—'),
-    statCardHTML('Avg Rule Compliance', s.avgRuleScore!==null ? s.avgRuleScore.toFixed(1)+'/10' : '—'),
-    statCardHTML('Avg Setup Quality', s.avgSetupScore!==null ? s.avgSetupScore.toFixed(1)+'/10' : '—'),
   ].join('');
 }
 
@@ -4337,8 +4346,34 @@ function renderPsychology(){
 
 /* ============================================================ MISTAKES ============================================================ */
 const mistakeForm = document.getElementById('mistakeForm');
-document.getElementById('newMistakeBtn').addEventListener('click', ()=>{ mistakeForm.classList.add('open'); document.getElementById('mDate').value = todayDMY(); });
-document.getElementById('cancelMistakeBtn').addEventListener('click', ()=> mistakeForm.classList.remove('open'));
+let mSelectedTradeId = null;
+function renderMLinkedChip(){
+  const chip = document.getElementById('mLinkedTradeChip');
+  if(!mSelectedTradeId){ chip.style.display='none'; chip.innerHTML=''; return; }
+  const t = trades.find(x=>x.id===mSelectedTradeId);
+  if(!t){ mSelectedTradeId=null; chip.style.display='none'; chip.innerHTML=''; return; }
+  chip.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg-panel-2);border:1px solid var(--border-soft);border-radius:8px;padding:8px 10px;font-size:11.5px;margin-bottom:8px;';
+  chip.innerHTML = `<span>${fmtDate(t.date)||'—'} · ${t.symbol||'—'} · ${t.dir||'—'} · ${isClosed(t)?'$'+parseFloat(t.profit).toFixed(2):'Open'}</span><button type="button" onclick="mClearLinkedTrade()" style="background:none;border:none;color:var(--text-low);cursor:pointer;font-size:13px;">✕</button>`;
+}
+function mClearLinkedTrade(){ mSelectedTradeId = null; renderMLinkedChip(); }
+document.getElementById('mLinkTradeBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('mLinkSelect');
+  const sorted = [...trades].sort((a,b)=> new Date(b.date+'T'+(b.time||'00:00')) - new Date(a.date+'T'+(a.time||'00:00')));
+  sel.innerHTML = sorted.length===0
+    ? '<option value="">No journal trades yet</option>'
+    : '<option value="">Select a trade…</option>' + sorted.map(t=> `<option value="${t.id}">${fmtDate(t.date)||'—'} · ${t.symbol||'—'} · ${t.dir||'—'} · ${isClosed(t)?'$'+parseFloat(t.profit).toFixed(2):'Open'}</option>`).join('');
+  document.getElementById('mLinkPicker').style.display = 'block';
+});
+document.getElementById('mCancelLinkBtn').addEventListener('click', ()=> document.getElementById('mLinkPicker').style.display='none');
+document.getElementById('mConfirmLinkBtn').addEventListener('click', ()=>{
+  const val = document.getElementById('mLinkSelect').value;
+  if(!val) return;
+  mSelectedTradeId = val;
+  renderMLinkedChip();
+  document.getElementById('mLinkPicker').style.display = 'none';
+});
+document.getElementById('newMistakeBtn').addEventListener('click', ()=>{ mistakeForm.classList.add('open'); document.getElementById('mDate').value = todayDMY(); mSelectedTradeId=null; renderMLinkedChip(); });
+document.getElementById('cancelMistakeBtn').addEventListener('click', ()=> { mistakeForm.classList.remove('open'); mSelectedTradeId=null; renderMLinkedChip(); document.getElementById('mLinkPicker').style.display='none'; });
 document.getElementById('mType').addEventListener('change', function(){
   document.getElementById('mCustomField').style.display = this.value==='Custom…' ? 'block' : 'none';
 });
@@ -4353,11 +4388,13 @@ document.getElementById('saveMistakeBtn').addEventListener('click', async ()=>{
     date: mDate, type,
     moneyLost: parseFloat(document.getElementById('mMoneyLost').value)||0,
     account: document.getElementById('mAccount').value, notes: document.getElementById('mNotes').value,
+    linkedTradeId: mSelectedTradeId || null,
   });
   await persistMistakes();
   renderMistakes();
   mistakeForm.classList.remove('open');
   document.getElementById('mCustomField').style.display='none';
+  mSelectedTradeId = null; renderMLinkedChip();
   ['mCustomType','mMoneyLost','mAccount','mNotes'].forEach(id=>document.getElementById(id).value='');
 });
 async function deleteMistake(id){ mistakes = mistakes.filter(m=>m.id!==id); await persistMistakes(); renderMistakes(); }
@@ -4398,11 +4435,14 @@ function renderMistakes(){
       </div>
     </div>`).join('');
   const rows = [...mistakes].sort((a,b)=> new Date(b.date)-new Date(a.date));
-  tableHost.innerHTML = `<table><thead><tr><th>Date</th><th>Type</th><th>Money Lost</th><th>Account</th><th>Notes</th><th></th></tr></thead>
-    <tbody>${rows.map(m=>`<tr>
-      <td>${fmtDate(m.date)||'—'}</td><td>${m.type}</td><td class="neg">-$${Math.abs(m.moneyLost||0).toFixed(2)}</td><td>${m.account||'—'}</td><td>${m.notes||'—'}</td>
+  tableHost.innerHTML = `<table><thead><tr><th>Date</th><th>Type</th><th>Money Lost</th><th>Account</th><th>Trade</th><th>Notes</th><th></th></tr></thead>
+    <tbody>${rows.map(m=>{
+      const lt = m.linkedTradeId ? trades.find(t=>t.id===m.linkedTradeId) : null;
+      const tradeCell = lt ? `${fmtDate(lt.date)||'—'} · ${lt.symbol||'—'}` : '—';
+      return `<tr>
+      <td>${fmtDate(m.date)||'—'}</td><td>${m.type}</td><td class="neg">-$${Math.abs(m.moneyLost||0).toFixed(2)}</td><td>${m.account||'—'}</td><td>${tradeCell}</td><td>${m.notes||'—'}</td>
       <td><button class="btn ghost" style="padding:4px 8px;font-size:11px;" onclick="deleteMistake('${m.id}')">✕</button></td>
-    </tr>`).join('')}</tbody></table>`;
+    </tr>`;}).join('')}</tbody></table>`;
 }
 
 /* ============================================================ AI COACH ============================================================ */
