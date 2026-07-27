@@ -8,26 +8,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-void:#F2F3F0;
+  --bg-void:#F1F3F5;
   --bg-panel:#FFFFFF;
-  --bg-panel-2:#F7F7F4;
+  --bg-panel-2:#F5F7F8;
   --bg-raised:#FFFFFF;
-  --bg-sunken:#ECEDE9;
-  --border:#DEE0DA;
-  --border-soft:#E7E8E3;
-  --text-hi:#14151A;
-  --text-mid:#5B5F62;
-  --text-low:#93968F;
-  --accent:#A9711F;
-  --accent-dim:rgba(169,113,31,0.10);
-  --accent-hi:#8A5B15;
-  --gold:#1D7F91;
-  --gold-dim:rgba(29,127,145,0.10);
-  --profit:#137A4F;
-  --profit-dim:rgba(19,122,79,0.09);
-  --profit-line:#137A4F;
-  --loss:#B23A31;
-  --loss-dim:rgba(178,58,49,0.09);
+  --bg-sunken:#EAEDEF;
+  --border:#DCE1E4;
+  --border-soft:#E6E9EB;
+  --text-hi:#12171A;
+  --text-mid:#5C6670;
+  --text-low:#94A0A8;
+  --accent:#2E6E76;
+  --accent-dim:rgba(46,110,118,0.10);
+  --accent-hi:#255961;
+  --gold:#B9862E;
+  --gold-dim:rgba(185,134,46,0.10);
+  --profit:#1B8A5A;
+  --profit-dim:rgba(27,138,90,0.09);
+  --profit-line:#1B8A5A;
+  --loss:#BE4A38;
+  --loss-dim:rgba(190,74,56,0.09);
   --font-display:'Space Grotesk',sans-serif;
   --font-body:'Inter',sans-serif;
   --font-mono:'JetBrains Mono',monospace;
@@ -36,31 +36,31 @@
   --shadow-md:0 3px 10px rgba(20,21,26,0.08),0 1px 3px rgba(20,21,26,0.05);
 }
 html[data-theme="dark"]{
-  --bg-void:#07090C;
-  --bg-panel:#0E1116;
-  --bg-panel-2:#12161C;
-  --bg-raised:#161B22;
-  --bg-sunken:#0A0D11;
-  --border:#20262F;
-  --border-soft:#181D24;
-  --text-hi:#EDEFF2;
-  --text-mid:#8991A0;
-  --text-low:#4B5261;
-  --accent:#DDA43C;
-  --accent-dim:rgba(221,164,60,0.13);
-  --accent-hi:#F0BE5E;
-  --gold:#39B6CC;
-  --gold-dim:rgba(57,182,204,0.13);
-  --profit:#31D689;
-  --profit-dim:rgba(49,214,137,0.12);
-  --profit-line:#31D689;
-  --loss:#F0594F;
-  --loss-dim:rgba(240,89,79,0.12);
-  --shadow:0 1px 2px rgba(0,0,0,0.3),0 1px 3px rgba(0,0,0,0.35);
-  --shadow-md:0 6px 16px rgba(0,0,0,0.4),0 1px 3px rgba(0,0,0,0.3);
+  --bg-void:#0D1013;
+  --bg-panel:#151A1F;
+  --bg-panel-2:#1A2129;
+  --bg-raised:#1E262E;
+  --bg-sunken:#10151A;
+  --border:#2B333C;
+  --border-soft:#212930;
+  --text-hi:#E7EBEE;
+  --text-mid:#97A1AB;
+  --text-low:#5C6670;
+  --accent:#4A93A8;
+  --accent-dim:rgba(74,147,168,0.16);
+  --accent-hi:#5FA8BC;
+  --gold:#E0A857;
+  --gold-dim:rgba(224,168,87,0.16);
+  --profit:#4FBF8A;
+  --profit-dim:rgba(79,191,138,0.14);
+  --profit-line:#4FBF8A;
+  --loss:#E2604F;
+  --loss-dim:rgba(226,96,79,0.14);
+  --shadow:0 1px 2px rgba(0,0,0,0.25),0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:0 6px 16px rgba(0,0,0,0.35),0 1px 3px rgba(0,0,0,0.25);
 }
-html[data-theme="dark"] .btn{color:#191108;}
-html[data-theme="dark"] ::selection{color:#191108;}
+html[data-theme="dark"] .btn:not(.ghost):not(.danger){color:#0A1519;}
+html[data-theme="dark"] ::selection{color:#0A1519;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 html{overflow-x:hidden;}
@@ -174,8 +174,8 @@ input,select,textarea{font-family:inherit;}
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;font-size:12.5px;border:none;box-shadow:var(--shadow);letter-spacing:0.01em;}
 .btn:hover{background:var(--accent-hi);}
-.btn.ghost{background:var(--bg-panel);border:1px solid var(--border);color:var(--text-mid);box-shadow:none;font-weight:600;}
-.btn.ghost:hover{color:var(--accent-hi);border-color:var(--accent);}
+.btn.ghost{background:var(--bg-panel);border:1px solid var(--border);color:var(--accent-hi);box-shadow:none;font-weight:600;}
+.btn.ghost:hover{color:var(--accent-hi);border-color:var(--accent);background:var(--accent-dim);}
 .btn.ghost.active{background:var(--accent-dim);color:var(--accent-hi);border-color:var(--accent);}
 .btn.danger{background:var(--bg-panel);border:1px solid rgba(178,58,49,0.35);color:var(--loss);box-shadow:none;}
 .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
@@ -299,7 +299,7 @@ tr:hover td{background:var(--bg-panel-2);}
 .coach-chat-inputrow input{flex:1;background:var(--bg-panel-2);border:1px solid var(--border);border-radius:12px;color:var(--text-hi);padding:13px 16px;font-size:13px;font-family:var(--font-body);}
 .coach-chat-inputrow input:focus{outline:none;border-color:var(--accent);}
 #coachChatSendBtn{width:44px;height:44px;flex-shrink:0;border-radius:12px;background:var(--accent);color:#fff;border:none;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
-html[data-theme="dark"] #coachChatSendBtn{color:#191108;}
+html[data-theme="dark"] #coachChatSendBtn{color:#0A1519;}
 #coachChatSendBtn:hover{background:var(--accent-hi);}
 #coachChatLog{max-width:900px;margin:0 auto 6px;max-height:480px;overflow-y:auto;padding:4px 2px;}
 .coach-msg{display:flex;margin-bottom:14px;}
@@ -307,7 +307,7 @@ html[data-theme="dark"] #coachChatSendBtn{color:#191108;}
 .coach-msg .bubble{max-width:75%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.7;}
 .coach-msg.user .bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px;font-weight:500;}
 .coach-msg.user .bubble,.coach-msg.user .bubble *{color:#fff !important;}
-html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-msg.user .bubble *{color:#191108 !important;}
+html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-msg.user .bubble *{color:#0A1519 !important;}
 .coach-msg.bot .bubble{background:var(--bg-panel-2);border:1px solid var(--border-soft);color:var(--text-hi);border-bottom-left-radius:4px;}
 .coach-msg.bot .bubble .src{display:block;margin-top:6px;font-size:10px;color:var(--text-low);font-family:var(--font-mono);}
 
@@ -1555,6 +1555,9 @@ function updateClocks(){
 }
 
 /* ============================================================ TRADINGVIEW ============================================================ */
+function currentTvTheme(){
+  return document.documentElement.getAttribute('data-theme')==='dark' ? 'dark' : 'light';
+}
 function loadTickerTape(){
   const container = document.getElementById('tv-ticker-tape');
   if(!container) return;
@@ -1566,7 +1569,7 @@ function loadTickerTape(){
     symbols:[{proName:'OANDA:XAUUSD',title:'GOLD'},{proName:'BITSTAMP:BTCUSD',title:'BTCUSD'},{proName:'BITSTAMP:ETHUSD',title:'ETHUSD'},
       {proName:'OANDA:EURUSD',title:'EURUSD'},{proName:'OANDA:GBPUSD',title:'GBPUSD'},{proName:'OANDA:NAS100USD',title:'NAS100'},
       {proName:'OANDA:US30USD',title:'US30'},{proName:'OANDA:XAGUSD',title:'SILVER'}],
-    showSymbolLogo:true, isTransparent:true, displayMode:'adaptive', colorTheme:'light', locale:'en'
+    showSymbolLogo:true, isTransparent:true, displayMode:'adaptive', colorTheme:currentTvTheme(), locale:'en'
   });
   const wrap = document.createElement('div'); wrap.className='tradingview-widget-container'; wrap.appendChild(script);
   container.appendChild(wrap);
@@ -1577,7 +1580,7 @@ function loadMarketWidgets(){
   s1.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
   s1.async = true;
   s1.innerHTML = JSON.stringify({
-    colorTheme:'light', dateRange:'12M', showChart:false, locale:'en', isTransparent:true, width:'100%', height:'400',
+    colorTheme:currentTvTheme(), dateRange:'12M', showChart:false, locale:'en', isTransparent:true, width:'100%', height:'400',
     tabs:[{title:'Forex',symbols:[{s:'OANDA:XAUUSD'},{s:'OANDA:XAGUSD'},{s:'OANDA:EURUSD'},{s:'OANDA:GBPUSD'},{s:'OANDA:USDJPY'}]},
           {title:'Indices',symbols:[{s:'OANDA:NAS100USD'},{s:'OANDA:US30USD'},{s:'OANDA:SPX500USD'}]},
           {title:'Crypto',symbols:[{s:'BITSTAMP:BTCUSD'},{s:'BITSTAMP:ETHUSD'}]}]
@@ -1599,13 +1602,14 @@ function loadCustomSymbol(){
   loadChart(raw.toUpperCase(), raw.toUpperCase());
 }
 function loadChart(symbol,label){
+  window.__lastChartSymbol = symbol;
   const ch = document.getElementById('tv-chart'); ch.innerHTML='';
   document.getElementById('chartTitle').textContent = (label||symbol)+' — Live Chart';
   const s2 = document.createElement('script');
   s2.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
   s2.async = true;
-  s2.innerHTML = JSON.stringify({autosize:true, symbol:symbol, interval:'15', timezone:'Asia/Kolkata', theme:'light', style:'1', locale:'en',
-    hide_top_toolbar:false, hide_legend:false, allow_symbol_change:true, save_image:false, backgroundColor:'rgba(255,255,255,1)'});
+  s2.innerHTML = JSON.stringify({autosize:true, symbol:symbol, interval:'15', timezone:'Asia/Kolkata', theme:currentTvTheme(), style:'1', locale:'en',
+    hide_top_toolbar:false, hide_legend:false, allow_symbol_change:true, save_image:false, backgroundColor: currentTvTheme()==='dark' ? 'rgba(21,26,31,1)' : 'rgba(255,255,255,1)'});
   const wrap = document.createElement('div'); wrap.className='tradingview-widget-container'; wrap.style.height='100%'; wrap.appendChild(s2);
   ch.appendChild(wrap);
 }
@@ -5376,6 +5380,12 @@ async function initTheme(){
 function applyTheme(theme){
   if(theme==='dark'){ document.documentElement.setAttribute('data-theme','dark'); document.getElementById('themeToggle').textContent='☀️'; }
   else{ document.documentElement.removeAttribute('data-theme'); document.getElementById('themeToggle').textContent='🌙'; }
+  loadTickerTape();
+  if(window.__marketLoaded){
+    loadMarketWidgets();
+    const activeSym = document.getElementById('chartTitle') ? document.getElementById('chartTitle').textContent.replace(' — Live Chart','') : 'GOLD (XAUUSD)';
+    loadChart(window.__lastChartSymbol || 'OANDA:XAUUSD', activeSym);
+  }
 }
 
 /* ============================================================ INIT ============================================================ */
