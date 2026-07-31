@@ -555,8 +555,22 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
             <div class="field"><label>Symbol</label><input id="fSymbol" list="symbolWatchlist" placeholder="Select or type a symbol"></div>
             <datalist id="symbolWatchlist"></datalist>
             <div class="field"><label>Date</label><input id="fDate" type="text" class="dmy-date" placeholder="dd/mm/yyyy" maxlength="10" inputmode="numeric"></div>
-            <div class="field field-time"><label>Entry Time (UTC)</label><input id="fTime" type="time"></div>
-            <div class="field field-time"><label>Exit Time (UTC)</label><input id="fExitTime" type="time"></div>
+            <div class="field field-time">
+              <label>Entry Time (IST)</label>
+              <input id="fTime" type="time">
+              <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+                <input id="fTimeMT5" type="time" style="flex:1;font-size:11px;padding:5px 8px;" title="Enter MT5 terminal time here to auto-convert to IST">
+                <button type="button" class="btn ghost" style="font-size:10px;padding:5px 8px;white-space:nowrap;" onclick="fillFromMT5('fTime','fTimeMT5')">MT5 → IST</button>
+              </div>
+            </div>
+            <div class="field field-time">
+              <label>Exit Time (IST)</label>
+              <input id="fExitTime" type="time">
+              <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+                <input id="fExitTimeMT5" type="time" style="flex:1;font-size:11px;padding:5px 8px;" title="Enter MT5 terminal time here to auto-convert to IST">
+                <button type="button" class="btn ghost" style="font-size:10px;padding:5px 8px;white-space:nowrap;" onclick="fillFromMT5('fExitTime','fExitTimeMT5')">MT5 → IST</button>
+              </div>
+            </div>
             <div class="field"><label>Direction</label><select id="fDir"><option>Long</option><option>Short</option></select></div>
             <div class="field"><label>Entry</label><input id="fEntry" type="number" step="any"></div>
             <div class="field"><label>Stop Loss</label><input id="fSL" type="number" step="any"></div>
@@ -602,7 +616,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
           <h3>📋 Bulk Import Trade History</h3>
           <p style="font-size:11.5px;color:var(--text-low);margin-bottom:10px;line-height:1.6;">
             Paste rows copied from your broker/prop-firm trade history or an MT5 statement. Expected columns, tab-separated (this matches Goat Funded Trader's Trading History table):<br>
-            <code style="background:var(--bg-sunken);padding:2px 6px;border-radius:4px;">Ticket · Open Time (UTC) · Open Price · Close Time (UTC) · Close Price · Side · Symbol · Volume · Profit</code><br>
+            <code style="background:var(--bg-sunken);padding:2px 6px;border-radius:4px;">Ticket · Open Time (IST) · Open Price · Close Time (IST) · Close Price · Side · Symbol · Volume · Profit</code><br>
             Skip the header row or leave it in — it's ignored either way. Re-pasting a statement with overlapping dates is safe — trades with a ticket number already logged for this account are automatically skipped, not double-counted.
           </p>
           <div class="form-grid" style="margin-bottom:10px;align-items:end;">
@@ -675,7 +689,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
             <div class="chart-panel"><h3>Performance by Month</h3><div id="byMonthBars"></div></div>
           </div>
           <div class="chart-panel" style="margin-top:16px;">
-            <h3>Hour × Weekday Heatmap <span style="font-weight:400;color:var(--text-low);font-size:11px;">(net P&L by entry hour, UTC)</span></h3>
+            <h3>Hour × Weekday Heatmap <span style="font-weight:400;color:var(--text-low);font-size:11px;">(net P&L by entry hour, IST)</span></h3>
             <div id="hourWeekdayHeatmap"></div>
           </div>
           <div class="chart-panel" style="margin-top:16px;">
@@ -699,7 +713,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
 
         <div class="subsection" id="an-duration">
           <div class="table-wrap"><div class="table-scroll scroll-hide" id="durationTableHost"></div></div>
-          <p style="font-size:11px;color:var(--text-low);margin-top:10px;">Duration is calculated from Entry Time to Exit Time (UTC). Log an Exit Time on your trades to populate this view.</p>
+          <p style="font-size:11px;color:var(--text-low);margin-top:10px;">Duration is calculated from Entry Time to Exit Time (IST). Log an Exit Time on your trades to populate this view.</p>
         </div>
 
         <div class="subsection" id="an-summary">
@@ -710,7 +724,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
 
       <!-- CALENDAR -->
       <section class="section" id="calendar">
-        <div class="section-title">Trading Calendar <span style="font-size:11px;font-weight:400;color:var(--text-low);margin-left:8px;">Dates are UTC — matching your prop firm records</span></div>
+        <div class="section-title">Trading Calendar <span style="font-size:11px;font-weight:400;color:var(--text-low);margin-left:8px;">Dates are IST — matching your prop firm's website records</span></div>
         <div class="stat-row" id="calStats"></div>
         <div class="panel">
           <div class="cal-header">
@@ -2273,18 +2287,36 @@ function calcRR(entry,sl,tp){
   return +(reward/risk).toFixed(2);
 }
 function timeToUtcMinutes(dateStr,timeStr){
+  // Trades are logged using the time shown on the broker's website Trading History table.
+  // That column is labeled "(UTC)" but is actually already IST (the site renders in the
+  // viewer's local timezone without updating the header). Convert IST -> true UTC (-5:30)
+  // before comparing against real-world session windows.
   if(!timeStr) return null;
   const [hh,mm] = timeStr.split(':').map(Number);
-  return ((hh*60+mm)%1440+1440)%1440;
+  return ((hh*60+mm-330)%1440+1440)%1440;
 }
-function utcToIST(timeStr){
+function istToBrokerTime(timeStr){
+  // Logged time is already IST. This returns the equivalent MT5 terminal / broker server
+  // time (UTC+3) for reference — IST -> broker is -2:30 (150 min).
   if(!timeStr) return '—';
   const [hh,mm] = timeStr.split(':').map(Number);
   if(isNaN(hh)||isNaN(mm)) return '—';
-  const totalMin = hh*60+mm+330; // +5h30m
-  const istH = Math.floor(totalMin/60)%24;
-  const istM = totalMin%60;
-  return String(istH).padStart(2,'0')+':'+String(istM).padStart(2,'0')+' IST';
+  const totalMin = ((hh*60+mm-150)%1440+1440)%1440; // -2h30m (IST -> broker UTC+3)
+  const bH = Math.floor(totalMin/60), bM = totalMin%60;
+  return String(bH).padStart(2,'0')+':'+String(bM).padStart(2,'0')+' (MT5)';
+}
+function fillFromMT5(targetId, helperId){
+  // Reverse of istToBrokerTime: convert an entered MT5 terminal time (UTC+3) to IST (+2:30)
+  // and fill it straight into the main Entry/Exit Time field.
+  const helper = document.getElementById(helperId);
+  const v = helper.value;
+  if(!v) return;
+  const [hh,mm] = v.split(':').map(Number);
+  if(isNaN(hh)||isNaN(mm)) return;
+  const totalMin = ((hh*60+mm+150)%1440+1440)%1440; // +2h30m (broker UTC+3 -> IST)
+  const istH = Math.floor(totalMin/60), istM = totalMin%60;
+  document.getElementById(targetId).value = String(istH).padStart(2,'0')+':'+String(istM).padStart(2,'0');
+  helper.value = '';
 }
 
 function sessionFromUTC(dateStr,timeStr){
@@ -2515,7 +2547,7 @@ function renderJournalTable(hostId, tradeArr, showDelete){
     const delBtn = showDelete ? `<td style="white-space:nowrap;"><button class="btn ghost" style="padding:4px 8px;font-size:11px;margin-right:4px;" onclick="editTrade(${realIdx})">✎</button><button class="btn ghost" style="padding:4px 8px;font-size:11px;" onclick="deleteTrade(${realIdx})">✕</button></td>` : '';
     const thumbs = `<td>${t.imgBefore?`<img src="${t.imgBefore}" style="width:26px;height:26px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--border);margin-right:3px;" onclick="openImageLightbox('${t.imgBefore}')">`:''}${t.imgAfter?`<img src="${t.imgAfter}" style="width:26px;height:26px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--border);" onclick="openImageLightbox('${t.imgAfter}')">`:''}${!t.imgBefore&&!t.imgAfter?'—':''}</td>`;
     return `<tr>
-      ${checkbox}<td>${idx+1}</td><td>${fmtDate(t.date)||'—'}</td><td>${t.time||'—'}</td><td>${utcToIST(t.time)}</td><td>${sessionFromUTC(t.date,t.time)}</td><td>${t.account||'—'}</td><td>${t.symbol||'—'}</td>
+      ${checkbox}<td>${idx+1}</td><td>${fmtDate(t.date)||'—'}</td><td>${t.time||'—'}</td><td>${istToBrokerTime(t.time)}</td><td>${sessionFromUTC(t.date,t.time)}</td><td>${t.account||'—'}</td><td>${t.symbol||'—'}</td>
       <td><span class="badge ${t.dir==='Short'?'short':'long'}">${t.dir||'—'}</span></td><td>${t.entry??'—'}</td><td>${t.sl??'—'}</td><td>${t.tp??'—'}</td>
       <td>${rr!==null?rr+'R':'—'}</td><td class="${pnlClass}">${pnlDisplay}</td><td><span class="badge ${resClass}">${result}</span></td>
       <td><span class="badge be">${t.lifecycle||'Closed'}</span></td><td>${t.strategy||'—'}</td><td>${t.confidence?t.confidence+'/10':'—'}</td>${thumbs}${delBtn}
@@ -2524,7 +2556,7 @@ function renderJournalTable(hostId, tradeArr, showDelete){
   window['rows_'+hostId.replace(/[^a-zA-Z0-9]/g,'')] = rows;
   const selectAllTh = bulk ? `<th><input type="checkbox" ${rows.length>0 && rows.every(t=>selectedTrades.has(t))?'checked':''} onchange="toggleTradeSelectAll(this.checked, rows_${hostId.replace(/[^a-zA-Z0-9]/g,'')})"></th>` : '';
   host.innerHTML = `<div class="table-wrap"><div class="table-scroll scroll-hide"><table>
-    <thead><tr>${selectAllTh}<th>#</th><th>Date (UTC)</th><th>Time UTC</th><th>IST</th><th>Session</th><th>Account</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th><th>RR</th><th>P&L</th><th>Result</th><th>Status</th><th>Strategy</th><th>Confidence</th><th>Shots</th>${showDelete?'<th>Actions</th>':''}</tr></thead>
+    <thead><tr>${selectAllTh}<th>#</th><th>Date (IST)</th><th>Time IST</th><th>MT5 Time</th><th>Session</th><th>Account</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th><th>RR</th><th>P&L</th><th>Result</th><th>Status</th><th>Strategy</th><th>Confidence</th><th>Shots</th>${showDelete?'<th>Actions</th>':''}</tr></thead>
     <tbody>${trHtml}</tbody></table></div></div>`;
   const delSelBtn = document.getElementById('journalDeleteSelectedBtn');
   if(delSelBtn) delSelBtn.textContent = `🗑 Delete Selected${selectedTrades.size?' ('+selectedTrades.size+')':''}`;
@@ -2546,7 +2578,7 @@ document.getElementById('journalDeleteSelectedBtn').addEventListener('click', as
   refreshAll();
 });
 
-/* ---- bulk import: parse broker/MT5-style trade history, converting UTC times to IST ---- */
+/* ---- bulk import: parse trade history pasted from the broker website table (times shown there are IST, mislabeled "UTC" on their site) ---- */
 const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 function parseBrokerTimestamp(str){
   if(!str) return null;
@@ -2558,9 +2590,10 @@ function parseBrokerTimestamp(str){
   let year = parseInt(yy.length===2 ? '20'+yy : yy);
   let hour = parseInt(hh);
   if(ampm){ const isPM = /pm/i.test(ampm); if(isPM && hour<12) hour+=12; if(!isPM && hour===12) hour=0; }
-  // Store as UTC — this keeps dates consistent with prop firm records
-  // and ensures sessionFromUTC() (which expects UTC time) classifies sessions correctly.
-  // The journal displays times in UTC; IST offset (+5:30) is shown as context only.
+  // Store as-is — this is the time shown on the broker website's Trading History table,
+  // which is actually IST despite that site labeling its column "(UTC)". timeToUtcMinutes()
+  // converts IST -> true UTC before classifying sessions. istToBrokerTime() derives the
+  // equivalent MT5 terminal time (UTC+3) for reference.
   const dateStr = `${year}-${String(monIdx+1).padStart(2,'0')}-${String(parseInt(day)).padStart(2,'0')}`;
   const timeStr = `${String(hour).padStart(2,'0')}:${String(parseInt(mm)).padStart(2,'0')}`;
   return {dateStr, timeStr};
@@ -2739,13 +2772,13 @@ function csvEscape(v){
 }
 document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
   if(trades.length===0){ alert('No trades to export yet.'); return; }
-  const cols = ['Date','Time (UTC)','Time (IST)','Session','Account','Symbol','Direction','Entry','Stop Loss','Take Profit','Lot Size','RR','Profit','Result','Status','Strategy','Confidence','Emotion','Discipline','Stress','Execution Score','Rule Compliance','Setup Quality','Notes','TradingView Link'];
+  const cols = ['Date','Time (IST)','Time (MT5)','Session','Account','Symbol','Direction','Entry','Stop Loss','Take Profit','Lot Size','RR','Profit','Result','Status','Strategy','Confidence','Emotion','Discipline','Stress','Execution Score','Rule Compliance','Setup Quality','Notes','TradingView Link'];
   const rows = [...trades].sort((a,b)=> new Date(a.date+'T'+(a.time||'00:00')) - new Date(b.date+'T'+(b.time||'00:00'))).map(t=>{
     const rr = calcRR(t.entry,t.sl,t.tp);
     let result = 'Open';
     if(isClosed(t)){ const p=parseFloat(t.profit); result = p>0?'Win':p<0?'Loss':'BE'; }
     return [
-      t.date||'', t.time||'', utcToIST(t.time)||'', sessionFromUTC(t.date,t.time), t.account||'', t.symbol||'', t.dir||'',
+      t.date||'', t.time||'', istToBrokerTime(t.time)||'', sessionFromUTC(t.date,t.time), t.account||'', t.symbol||'', t.dir||'',
       t.entry??'', t.sl??'', t.tp??'', t.lot??'', rr!==null?rr:'', isClosed(t)?parseFloat(t.profit).toFixed(2):'', result, t.lifecycle||'', t.strategy||'',
       t.confidence??'', t.emotion||'', t.discipline??'', t.stress??'', t.execScore??'', t.ruleScore??'', t.setupScore??'', t.notes||'', t.tvLink||''
     ].map(csvEscape).join(',');
@@ -3073,7 +3106,7 @@ function renderHourWeekdayHeatmap(closed){
       const cell = grid[wd+'|'+h];
       const val = cell?cell.sum:0;
       const bg = cell ? heatColor(val, maxAbs) : 'var(--bg-sunken)';
-      const label = cell ? `${wd} ${String(h).padStart(2,'0')}:00 UTC — ${cell.count} trade(s), ${val>=0?'+':''}$${val.toFixed(2)}` : `${wd} ${String(h).padStart(2,'0')}:00 UTC — no trades`;
+      const label = cell ? `${wd} ${String(h).padStart(2,'0')}:00 IST — ${cell.count} trade(s), ${val>=0?'+':''}$${val.toFixed(2)}` : `${wd} ${String(h).padStart(2,'0')}:00 IST — no trades`;
       html += `<td data-tip="${label.replace(/"/g,'&quot;')}" class="heat-cell" style="width:18px;height:18px;background:${bg};border:1px solid var(--border-soft);cursor:default;"></td>`;
     });
     html += '</tr>';
