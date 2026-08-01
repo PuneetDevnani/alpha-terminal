@@ -3861,7 +3861,36 @@ function buildAccountHistoryTab(){
   const a = currentDetailAccount;
   const arr = tradesForAccount(a.name);
   document.getElementById('ad-history').innerHTML = `<div id="ad-historyHost"></div>`;
-  renderJournalTable('ad-historyHost', arr, false);
+  renderAccountHistoryGrouped('ad-historyHost', arr);
+}
+function renderAccountHistoryGrouped(hostId, tradeArr){
+  const host = document.getElementById(hostId);
+  if(tradeArr.length===0){ host.innerHTML = `<div class="table-wrap"><div class="empty-state">No trades logged yet.</div></div>`; return; }
+  const byDate = {};
+  tradeArr.forEach(t=>{ const d=t.date||'—'; (byDate[d]=byDate[d]||[]).push(t); });
+  const dateKeys = Object.keys(byDate).sort((a,b)=> new Date(b)-new Date(a));
+  host.innerHTML = dateKeys.map(dateKey=>{
+    const dayTrades = [...byDate[dateKey]].sort((a,b)=> (a.time||'00:00').localeCompare(b.time||'00:00'));
+    const rowsHtml = dayTrades.map(t=>{
+      const rr = calcRR(t.entry,t.sl,t.tp);
+      let result='Open', resClass='be';
+      if(isClosed(t)){ const p=parseFloat(t.profit); result=p>0?'Win':p<0?'Loss':'BE'; resClass=p>0?'win':p<0?'loss':'be'; }
+      const pnlDisplay = isClosed(t) ? `$${parseFloat(t.profit).toFixed(2)}` : '—';
+      const pnlClass = isClosed(t) ? (parseFloat(t.profit)>0?'pos':parseFloat(t.profit)<0?'neg':'') : '';
+      return `<tr>
+        <td>${t.time||'—'}</td><td>${istToBrokerTime(t.time)}</td><td>${sessionFromUTC(t.date,t.time)}</td><td>${t.symbol||'—'}</td>
+        <td><span class="badge ${t.dir==='Short'?'short':'long'}">${t.dir||'—'}</span></td><td>${t.entry??'—'}</td><td>${t.sl??'—'}</td><td>${t.tp??'—'}</td>
+        <td>${t.lot??'—'}</td><td>${t.exitTime||'—'}</td><td>${rr!==null?rr+'R':'—'}</td><td class="${pnlClass}">${pnlDisplay}</td>
+        <td><span class="badge ${resClass}">${result}</span></td><td>${t.strategy||'—'}</td><td>${t.confidence?t.confidence+'/10':'—'}</td>
+      </tr>`;
+    }).join('');
+    return `<div style="margin-bottom:18px;">
+      <div style="font-family:var(--font-display);font-weight:600;font-size:13px;margin-bottom:8px;">${fmtDate(dateKey)||dateKey} <span style="font-weight:400;color:var(--text-low);">(${dayTrades.length} trade${dayTrades.length===1?'':'s'})</span></div>
+      <div class="table-wrap"><div class="table-scroll scroll-hide"><table>
+        <thead><tr><th>Time IST</th><th>MT5 Time</th><th>Session</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th><th>Lot</th><th>Exit Time</th><th>RR</th><th>P&L</th><th>Result</th><th>Strategy</th><th>Confidence</th></tr></thead>
+        <tbody>${rowsHtml}</tbody></table></div></div>
+    </div>`;
+  }).join('');
 }
 function buildAccountCalendarTab(){
   const a = currentDetailAccount;
