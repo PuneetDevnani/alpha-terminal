@@ -56,3 +56,13 @@ Headlines are polled every minute; publisher delivery is not a tick-level newswi
 `npm run dev` serves the frontend and public-data API at `http://127.0.0.1:4173`. Node 20+ is required; there are no package dependencies. Run `npm test` and `npm run check` before publishing.
 
 Deploy the repository through the existing Cloudflare Pages project so its `functions/` directory is compiled. Uploading the HTML alone will not supply `/api/terminal`. Existing Supabase configuration and `kv_store` schema are retained; no SQL migration is needed for these additions.
+
+## Fundamentals expansion — 2 November 2026
+
+Renamed News Terminal to Fundamentals and expanded its dashboard to include DST-aware indicative FX session clocks, an embedded gold quote, next US CPI/NFP release, global economic calendar, FX heatmap, all-market COT positioning, and upcoming US releases alongside existing headlines and Fed odds. TradingView widgets retain source branding and fallback links; session clocks exclude holidays. This recreates the reference dashboard's functional layout using independent public sources, not its proprietary news/AI services.
+
+Dedicated USA CPI and USA NFP monitors include 24 reference months of latest revised BLS data, charts, previous observations, release countdowns/schedules in IST, official source links, and related headlines. CPI monthly changes use SA indexes; annual changes use NSA indexes. NFP uses month-to-month payroll level changes in thousands, unemployment, and average hourly earnings. Missing observations are not treated as zero. BLS series are batched and cached hourly to reduce API usage; this is not a tick-by-tick economic release feed. Consensus estimates are available in the calendar widget and are not fabricated in BLS cards.
+
+The BLS calendar endpoint denied automated retrieval locally. An explicitly labelled official schedule verified on 2026-11-02 provides a fallback through December 2027; no dates are extrapolated beyond that. A successfully retrieved live schedule takes precedence. Sources: https://www.bls.gov/schedule/news_release/cpi.htm and https://www.bls.gov/schedule/news_release/empsit.htm.
+
+Validation: 31 tests pass; syntax and diff checks pass. Local batched API returned HTTP 200 for both CPI and NFP, 24 history rows each, no series errors. Browser verified latest data, dashboard widgets and mobile 390px layout without horizontal overflow. Production remains unchanged; paused Supabase verification is still pending explicit resume approval.
