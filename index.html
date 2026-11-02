@@ -364,6 +364,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
 .scroll-hide::-webkit-scrollbar{height:6px;}
 .scroll-hide::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
 </style>
+<link rel="stylesheet" href="additions.css">
 </head>
 <body>
 
@@ -439,12 +440,14 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
     <button class="nav-item" data-tab="challenges"><span class="ico">⛓</span> Challenges</button>
     <button class="nav-item" data-tab="transactions"><span class="ico">⇄</span> Transactions</button>
     <div class="nav-group-label">Growth</div>
+    <button class="nav-item" data-tab="learning"><span class="ico">▷</span> YouTube Learning</button>
     <button class="nav-item" data-tab="psychology"><span class="ico">◐</span> Psychology</button>
     <button class="nav-item" data-tab="mistakes"><span class="ico">⚠</span> Mistakes</button>
     <button class="nav-item" data-tab="coach"><span class="ico">❖</span> AI Coach</button>
     <button class="nav-item" data-tab="strategies"><span class="ico">☰</span> Strategies</button>
     <button class="nav-item" data-tab="notes"><span class="ico">✐</span> Notes</button>
     <div class="nav-group-label">Market</div>
+    <button class="nav-item" data-tab="news"><span class="ico">◷</span> News Terminal</button>
     <button class="nav-item" data-tab="market"><span class="ico">◎</span> Market Center</button>
     <div style="margin-top:auto;padding:14px 10px;font-size:10px;color:var(--text-low);border-top:1px solid var(--border-soft);" id="storageIndicator">Checking storage…</div>
   </aside>
@@ -1063,6 +1066,8 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
         <div class="simple-grid" id="noteGrid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr));"></div>
       </section>
 
+      <section class="section" id="learning"></section>
+      <section class="section" id="news"></section>
       <!-- MARKET -->
       <section class="section" id="market">
         <div class="section-title">Market Center</div>
@@ -1099,6 +1104,8 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
   <button class="mtab" data-tab="strategies"><span class="ico">☰</span>Strat</button>
   <button class="mtab" data-tab="notes"><span class="ico">✐</span>Notes</button>
   <button class="mtab" data-tab="market"><span class="ico">◎</span>Market</button>
+  <button class="mtab" data-tab="learning"><span class="ico">▷</span>Learn</button>
+  <button class="mtab" data-tab="news"><span class="ico">◷</span>News</button>
   <button class="mtab-more" id="mobileAccountBtn" onclick="toggleMobileAccountMenu(event)"><span class="ico">⚙</span>Account</button>
 </nav>
 <div class="mobile-account-backdrop" id="mobileAccountBackdrop" onclick="closeMobileAccountMenu()"></div>
@@ -1115,7 +1122,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
    - If you skip setup, or go offline, everything falls back to the local-only
      behavior exactly as before — nothing here is required.
 */
-const CLOUD_KEYS = ['trades','accounts','transactions','psychology','challenges','notes','coach_reviews','coach_chat','mistakes','strategies_lib','theme','mission_control','checklist_log'];
+const CLOUD_KEYS = ['trades','accounts','transactions','psychology','challenges','notes','coach_reviews','coach_chat','mistakes','strategies_lib','theme','mission_control','checklist_log','learning_library','news_events','news_bookmarks'];
 // Baked-in default project — the anon key is safe to ship in client code; row-level
 // security (not secrecy of this key) is what keeps your data private per-account.
 const DEFAULT_CLOUD_CONFIG = {
@@ -1142,16 +1149,7 @@ function clearCloudConfig(){
 function initSupabaseClient(){
   const cfg = getCloudConfig();
   if(!cfg || !cfg.url || !cfg.anonKey) return null;
-  try{ return window.supabase.createClient(cfg.url, cfg.anonKey); }catch(e){ return null; }
-}
-async function cloudKvGet(key){
-  const { data, error } = await sb.from('kv_store').select('value').eq('user_id', cloudUser.id).eq('key', key).maybeSingle();
-  if(error) throw error;
-  return data ? data.value : null;
-}
-async function cloudKvSet(key, value){
-  const { error } = await sb.from('kv_store').upsert({ user_id: cloudUser.id, key, value, updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' });
-  if(error) throw error;
+  try{ const client=window.supabase.createClient(cfg.url,cfg.anonKey); client.auth.onAuthStateChange((event,session)=>{if(__appBooted && cloudUser && (event==='SIGNED_OUT' || (session?.user && session.user.id!==cloudUser.id))) location.reload();}); return client; }catch(e){ return null; }
 }
 async function migrateLegacyLocalDataToCloudOnce(){
   // Only ever runs once, for whichever account first turns on cloud sync on this device —
@@ -1163,10 +1161,10 @@ async function migrateLegacyLocalDataToCloudOnce(){
     try{
       const local = await idbGet(key); // plain, unscoped key — the old pre-cloud cache
       if(local!==null && local!==undefined){
-        const existing = await cloudKvGet(key).catch(()=>null);
-        if(existing===null || existing===undefined) await cloudKvSet(key, local);
+        const existing = await cloudKvGet(key);
+        if(existing===null || existing===undefined) await sSet(key, local);
       }
-    }catch(e){ /* best-effort — skip keys that fail rather than block the whole migration */ }
+    }catch(e){ throw new Error('Legacy migration paused safely: '+(e.message||e)); }
   }
   localStorage.setItem('at_legacy_migrated','1');
 }
@@ -1188,15 +1186,13 @@ function skipCloudSetup(){
 function disconnectCloudConfig(){
   clearCloudConfig();
   sb = null; cloudUser = null;
-  showCgStep('config');
-  document.getElementById('cgUrl').value=''; document.getElementById('cgAnonKey').value='';
+  sessionStorage.setItem('at_open_config','1');
+  location.reload();
 }
 async function cloudLogout(){
-  if(sb) await sb.auth.signOut();
-  cloudUser = null;
-  storageBackend = 'checking';
-  updateStorageIndicator();
-  openCloudGate();
+  if(syncPendingCount && !confirm('Log out? Pending saves remain on this device for this account.')) return;
+  if(sb){ const {error}=await sb.auth.signOut(); if(error){alert('Could not log out: '+error.message);return;} }
+  location.reload();
 }
 function openCloudAccountModal(){
   if(!cloudUser) return;
@@ -1219,8 +1215,15 @@ async function wipeMyCloudData(){
   const typed = document.getElementById('cloudWipeConfirmInput').value.trim();
   if(typed !== cloudUser.email){ alert('That email doesn\'t match — nothing was deleted.'); return; }
   try{
-    const { error } = await sb.from('kv_store').delete().eq('user_id', cloudUser.id);
-    if(error) throw error;
+    const owner=syncOwner();
+    await syncSerial(async()=>{
+      ensureSyncOwner(owner);
+      const {error}=await owner.client.from('kv_store').delete().eq('user_id',owner.id);
+      if(error)throw error;
+      await idbSet(owner.prefix+'outbox',{});
+      for(const key of CLOUD_KEYS){await idbSet(owner.prefix+key,null);await idbSet(owner.prefix+'base::'+key,null);}
+    });
+    syncPendingCount=0;
     alert('Cloud data wiped for this account. The page will reload.');
     location.reload();
   }catch(e){ alert('Could not wipe data: '+(e.message||e)); }
@@ -1256,6 +1259,7 @@ document.getElementById('cgAuthSubmitBtn').addEventListener('click', async ()=>{
       if(error) throw error;
       if(data.session){
         cloudUser = data.user;
+        localStorage.removeItem('at_offline_mode');
         await migrateLegacyLocalDataToCloudOnce();
         document.getElementById('cloudGate').style.display='none';
         bootAppIfNeeded();
@@ -1268,6 +1272,7 @@ document.getElementById('cgAuthSubmitBtn').addEventListener('click', async ()=>{
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if(error) throw error;
       cloudUser = data.user;
+      localStorage.removeItem('at_offline_mode');
       document.getElementById('cloudGate').style.display='none';
       bootAppIfNeeded();
     }
@@ -1281,8 +1286,11 @@ document.getElementById('cgAuthSubmitBtn').addEventListener('click', async ()=>{
 
 let __appBooted = false;
 function bootAppIfNeeded(){
-  if(__appBooted) return;
+  if(__appBooted){ location.reload(); return; }
   __appBooted = true;
+  document.querySelector('.app').inert=true;
+  document.querySelector('.mobile-tabbar').inert=true;
+  const loading=document.createElement('div');loading.id='dataLoading';loading.style.cssText='position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:var(--bg-panel);color:var(--text-hi)';loading.textContent='Loading your saved journal…';document.body.append(loading);
   initTheme();
   buildClockBoard();
   loadTickerTape();
@@ -1292,10 +1300,11 @@ function bootAppIfNeeded(){
   setInterval(updateGreeting,60000);
   setInterval(updateDailyQuote,60000);
   initMissionControl();
-  loadData();
+  loadData().then(()=>{document.querySelector('.app').inert=false;document.querySelector('.mobile-tabbar').inert=false;loading.remove();}).catch(e=>{console.error(e);loading.textContent='Your data could not be loaded. Reload before making changes.';});
   attachAllDMYMasks();
 }
 async function initCloudGateAndBoot(){
+  if(sessionStorage.getItem('at_open_config')==='1'){sessionStorage.removeItem('at_open_config');document.getElementById('cloudGate').style.display='flex';showCgStep('config');return;}
   if(localStorage.getItem('at_offline_mode')==='1'){ bootAppIfNeeded(); return; }
   const cfg = getCloudConfig();
   if(!cfg){ openCloudGate(); return; }
@@ -1349,8 +1358,10 @@ async function idbGet(key){
 async function idbSet(key,value){
   const db = await idbOpen();
   return new Promise((resolve,reject)=>{
-    const tx = db.transaction('kv','readwrite').objectStore('kv').put({key,value});
-    tx.onsuccess = ()=> resolve(true);
+    const tx = db.transaction('kv','readwrite');
+    tx.objectStore('kv').put({key,value});
+    tx.oncomplete = ()=> resolve(true);
+    tx.onabort = ()=> reject(tx.error || new Error('Local save aborted'));
     tx.onerror = ()=> reject(tx.error);
   });
 }
@@ -1359,28 +1370,10 @@ async function idbSet(key,value){
 function scopedKey(key){
   // Namespaces the local cache per Supabase account so switching accounts on the
   // same browser can never read/write another account's cached data.
-  return cloudUser ? ('u_'+cloudUser.id+'::'+key) : key;
+  return cloudUser ? (getCloudConfig().url+'::u_'+cloudUser.id+'::'+key) : key;
 }
 async function sGet(key){
-  if(sb && cloudUser){
-    const sKey = scopedKey(key);
-    try{
-      const v = await cloudKvGet(key);
-      storageBackend = 'cloud';
-      if(v!==null && v!==undefined) idbSet(sKey, v).catch(()=>{}); // refresh this account's own local cache, best-effort
-      return v;
-    }catch(e){
-      // cloud unreachable — fall back to THIS account's own scoped cache only, never the shared/plain one
-      try{
-        const v = await idbGet(sKey);
-        storageBackend = 'cloud-offline';
-        return v!==null && v!==undefined ? v : null;
-      }catch(e2){
-        storageBackend = 'cloud-offline';
-        return null;
-      }
-    }
-  }
+  if(sb && cloudUser) return syncedGet(key);
   try{
     const r = await window.storage.get(key,false);
     storageBackend = 'claude';
@@ -1397,16 +1390,7 @@ async function sGet(key){
   }
 }
 async function sSet(key,value){
-  if(sb && cloudUser){
-    const sKey = scopedKey(key);
-    idbSet(sKey, value).catch(()=>{}); // this account's own local cache only, best-effort
-    try{
-      await cloudKvSet(key, value);
-      storageBackend = 'cloud';
-    }catch(e){ storageBackend = 'cloud-offline'; }
-    updateStorageIndicator();
-    return;
-  }
+  if(sb && cloudUser) return syncedSet(key,value).catch(e=>{alert('Save failed: '+(e.message||e)+'. Keep this page open and export a backup before reloading.');throw e;});
   try{
     await window.storage.set(key, JSON.stringify(value), false);
     storageBackend = 'claude';
@@ -1423,9 +1407,10 @@ async function sSet(key,value){
 }
 function updateStorageIndicator(){
   const now = new Date().toLocaleTimeString();
+  if(cloudUser && syncPendingCount) storageBackend='cloud-offline';
   let statusHtml, statusShort;
-  if(storageBackend==='cloud'){ statusHtml = `🟢 Synced to cloud · ${now}`; statusShort = `🟢 Synced`; }
-  else if(storageBackend==='cloud-offline'){ statusHtml = `🟡 Cloud offline — saved locally · ${now}`; statusShort = `🟡 Offline`; }
+  if(storageBackend==='cloud'){ statusHtml = `🟢 Saved to cloud · ${now}`; statusShort = `🟢 Synced`; }
+  else if(storageBackend==='cloud-offline'){ statusHtml = `🟡 Pending cloud saves: ${syncPendingCount} · ${syncIssue || "Will retry automatically"}`; statusShort = `🟡 Offline`; }
   else if(storageBackend==='claude'){ statusHtml = `🟢 Synced to Claude · ${now}`; statusShort = `🟢 Synced`; }
   else if(storageBackend==='indexeddb'){ statusHtml = `🟢 Saved locally in this browser · ${now}`; statusShort = `🟢 Local`; }
   else if(storageBackend==='memory'){ statusHtml = `🔴 Not persisting — data will be lost on reload`; statusShort = `🔴 Not saved`; }
@@ -1436,7 +1421,7 @@ function updateStorageIndicator(){
     const accountLine = cloudUser
       ? `<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">${cloudUser.email}</span><span style="display:flex;align-items:center;gap:12px;flex-shrink:0;"><button onclick="cloudLogout()" style="background:none;border:none;color:var(--accent-hi);cursor:pointer;font-size:12px;font-weight:600;padding:4px 2px;">Log out</button><button onclick="openCloudAccountModal()" title="Cloud account settings" style="background:none;border:none;color:var(--text-low);cursor:pointer;font-size:15px;padding:4px 2px;">⚙</button></span></div>`
       : `<div style="margin-top:6px;"><button onclick="openCloudGate()" style="background:none;border:none;color:var(--accent-hi);cursor:pointer;font-size:12px;font-weight:600;padding:4px 2px;">☁ Connect cloud sync</button></div>`;
-    el.innerHTML = statusHtml + accountLine;
+    el.innerHTML = statusHtml + accountLine + (cloudUser ? '<button class="btn ghost" style="margin-top:8px" onclick="openSyncStatus()">Sync details'+(syncLegacyCount?' · Local recovery available':'')+'</button>' : '');
   }
 
   const elMobile = document.getElementById('storageIndicatorMobile');
@@ -1449,6 +1434,7 @@ function renderMobileAccountMenu(){
   if(!menu) return;
   if(cloudUser){
     menu.innerHTML = `<div class="mam-email">${cloudUser.email}</div>
+      <button class="mam-item" onclick="closeMobileAccountMenu();openSyncStatus();">☁ Sync details</button>
       <button class="mam-item" onclick="closeMobileAccountMenu();cloudLogout();">↪ Log out</button>
       <button class="mam-item" style="color:var(--loss);" onclick="closeMobileAccountMenu();openCloudAccountModal();">🗑 Wipe my data</button>`;
   }else{
@@ -1477,7 +1463,7 @@ function closeMobileAccountMenu(){
 }
 
 /* ============================================================ NAV ============================================================ */
-const tabs = ['home','journal','gallery','analytics','calendar','accounts','challenges','transactions','psychology','mistakes','coach','strategies','notes','market'];
+const tabs = ['home','journal','gallery','analytics','calendar','accounts','challenges','transactions','psychology','mistakes','coach','strategies','notes','market','learning','news'];
 let analyticsSummaryMode = 'daily';
 function refreshAnalyticsForFilter(){
   const val = document.getElementById('analyticsAccountFilter').value;
@@ -1490,6 +1476,9 @@ function showTab(name){
   tabs.forEach(t=> document.getElementById(t).classList.toggle('active', t===name));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
   document.querySelectorAll('.mtab').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  if(name!=='learning') stopLearningVideo();
+  if(name==='learning') renderLearning();
+  if(name==='news') renderNews();
   if(name==='analytics') refreshAnalyticsForFilter();
   if(name==='calendar') renderCalendarTab();
   if(name==='accounts'){ document.getElementById('acctListView').style.display='block'; document.getElementById('acctDetailView').style.display='none'; }
@@ -2386,6 +2375,7 @@ async function loadData(){
   if(challengeIdsBackfilled) await persistChallenges();
   await syncChallengePayoutsWithTransactions();
   await loadStrategiesLib();
+  await loadGrowthData();
   refreshStrategyDatalist();
   updateStorageIndicator();
   refreshAccountDatalists();
@@ -2794,7 +2784,7 @@ document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
 
 /* ---- export / import full backup ---- */
 document.getElementById('exportDataBtn').addEventListener('click', async ()=>{
-  const payload = { trades, accounts, transactions, psychology, challenges, notes, coach_reviews: coachReviews, coach_chat: coachChat, mistakes, strategies_lib: strategiesLib, mission_control: await sGet('mission_control'), theme: await sGet('theme'), exportedAt: new Date().toISOString(), version:6 };
+  const payload = { learning_library: learningLibrary, news_events: newsEvents, news_bookmarks: newsBookmarks, checklist_log: await sGet('checklist_log'), trades, accounts, transactions, psychology, challenges, notes, coach_reviews: coachReviews, coach_chat: coachChat, mistakes, strategies_lib: strategiesLib, mission_control: await sGet('mission_control'), theme: await sGet('theme'), exportedAt: new Date().toISOString(), version:7 };
   const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2809,13 +2799,15 @@ document.getElementById('importFileInput').addEventListener('change', async (e)=
   const text = await file.text();
   try{
     const data = JSON.parse(text);
+    validateBackup(data);
     if(!confirm('This will replace your current data in this dashboard with the backup file. Continue?')) return;
     trades = data.trades || []; accounts = data.accounts || []; transactions = data.transactions || []; psychology = data.psychology || []; challenges = data.challenges || []; notes = data.notes || []; coachReviews = data.coach_reviews || []; coachChat = data.coach_chat || []; mistakes = data.mistakes || []; strategiesLib = data.strategies_lib || [];
     await persistTrades(); await persistAccounts(); await persistTxns(); await persistPsych(); await persistChallenges(); await persistNotes(); await persistCoachReviews(); await persistCoachChat(); await persistMistakes(); await persistStrategiesLib();
+    for(const key of ['learning_library','news_events','news_bookmarks','checklist_log']) if(Object.hasOwn(data,key)) await sSet(key,data[key]);
     if(data.mission_control) await sSet('mission_control', data.mission_control);
     if(data.theme) await sSet('theme', data.theme);
     refreshAccountDatalists(); refreshAll(); renderAccounts(); renderTransactions(); renderPsychology(); renderChallenges(); renderNotes(); renderMistakes(); location.reload();
-  }catch(err){ alert('Could not read that backup file. Please make sure it is an Alpha Terminal export.'); }
+  }catch(err){ alert('Backup restore stopped: '+(err.message||err)); }
   e.target.value = '';
 });
 
@@ -5451,7 +5443,11 @@ function applyTheme(theme){
 }
 
 /* ============================================================ INIT ============================================================ */
-initCloudGateAndBoot();
+/* Startup runs after the supporting modules below. */
 </script>
+<script src="sync.js"></script>
+<script src="growth.js"></script>
+<script src="news-terminal.js"></script>
+<script>initCloudGateAndBoot();</script>
 </body>
 </html>
