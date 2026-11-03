@@ -144,15 +144,17 @@ export function normalizeCalendar(rows){
 }
 export async function getCalendar(){const items=normalizeCalendar(await upstream('https://nfs.faireconomy.media/ff_calendar_thisweek.json'));return {items,fetchedAt:new Date().toISOString(),source:'Forex Factory weekly export',sourceUrl:'https://www.forexfactory.com/calendar',coverage:'Current provider week only. Export omits most actuals and historical series.',actualsAvailable:items.some(e=>e.actual!==null)};}
 
+export function normalizeNifty(payload){const d=payload?.data;if(String(payload?.code)!=='200'||!d)throw Error('Nifty quote unavailable');const price=Number(d.pricecurrent),changePercent=Number(d.pricepercentchange),epoch=Number(d.lastupd_epoch);if(!Number.isFinite(price)||price<=0||!Number.isFinite(changePercent)||!Number.isFinite(epoch)||epoch<=0)throw Error('Invalid Nifty quote');return {price,changePercent,asOf:new Date(epoch*1000).toISOString(),source:'Moneycontrol',url:'https://www.moneycontrol.com/indian-indices/nifty-50-9.html',fetchedAt:new Date().toISOString()};}
+export async function getNifty(){return normalizeNifty(await upstream('https://priceapi.moneycontrol.com/pricefeed/notapplicable/inidicesindia/in%3BNSX'));}
 export async function onRequestGet(context){
  const url=new URL(context.request.url),kind=url.searchParams.get('kind')||'headlines',market=url.searchParams.get('market');
- if(!['headlines','cot','fed','cpi','nfp','calendar'].includes(kind)||market&&!MARKETS.some(m=>m.id===market))return Response.json({error:'Unknown data request'},{status:400});
+ if(!['headlines','cot','fed','cpi','nfp','calendar','nifty'].includes(kind)||market&&!MARKETS.some(m=>m.id===market))return Response.json({error:'Unknown data request'},{status:400});
  const ttl=kind==='calendar'?1800:['cot','cpi','nfp'].includes(kind)?3600:60,cache=globalThis.caches?.default;
  const key=new Request(url.origin+'/api/terminal?kind='+kind+(kind==='cot'&&market?'&market='+market:''));
  if(cache){const hit=await cache.match(key);if(hit)return hit;}
  try{
-  const data=kind==='calendar'?await getCalendar():kind==='headlines'?await getHeadlines():kind==='cot'?await getCot(market):kind==='fed'?await getFed():await getMacro(kind);
-  const hasData=kind==='calendar'?data.items.length:kind==='headlines'?data.items.length:kind==='cot'?market?data.history.length||data.legacy.length:data.markets.some(m=>m.date):kind==='fed'?data.rate||data.meetings.length:data.history.length||data.schedule.length;
+  const data=kind==='nifty'?await getNifty():kind==='calendar'?await getCalendar():kind==='headlines'?await getHeadlines():kind==='cot'?await getCot(market):kind==='fed'?await getFed():await getMacro(kind);
+  const hasData=kind==='nifty'?Number.isFinite(data.price):kind==='calendar'?data.items.length:kind==='headlines'?data.items.length:kind==='cot'?market?data.history.length||data.legacy.length:data.markets.some(m=>m.date):kind==='fed'?data.rate||data.meetings.length:data.history.length||data.schedule.length;
   const response=Response.json(data,{status:hasData?200:503,headers:{'Cache-Control':hasData?'public, max-age='+ttl:'no-store','X-Content-Type-Options':'nosniff'}});
   if(cache&&hasData)context.waitUntil(cache.put(key,response.clone()));return response;
  }catch(error){return Response.json({error:'Market data is temporarily unavailable',detail:error.message},{status:502,headers:{'Cache-Control':'no-store'}});}
