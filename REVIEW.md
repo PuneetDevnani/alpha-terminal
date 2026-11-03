@@ -88,3 +88,11 @@ Changed light mode to blue/white surfaces with dark navy readable text and blue 
 Next release now picks the earliest upcoming provider-rated High event across currencies, with deduplicated CPI/NFP schedule fallback. Medium/Low/Past events are excluded. Dashboard includes today's high-impact releases and other upcoming high-impact events. Separate macro/geopolitical news selection explicitly labels keyword selection because publisher RSS does not provide authoritative impact ratings.
 
 Validation: 33 tests pass, including impact selection and CPI deduplication. Browser verified live market changes, light-blue/white and dark contrast, native release panels and source-labelled figures. Calendar source still has weekly-coverage/actuals limitations described above.
+
+## Editorial redesign and live Nifty — 3 November 2026
+
+Reworked the shell and news view toward the supplied reference: rounded floating sidebar/header, SVG navigation icons, blue selected states, sans-serif titles, larger featured-story card with publisher identity and original-source action, upcoming-release sidebar and softer layered cards. Page canvas remains white. Market tiles reduced from98px to52px; eight-tile heatmap has roughly half the former tile area.
+
+Added kind=nifty public-data endpoint using Moneycontrol's public Nifty50 index feed, validated numeric price/change and provider epoch, cached60seconds. NSE endpoint failed and Yahoo returned429, so neither was adopted. Nifty now displays the index level, daily percentage and Moneycontrol timestamp; it remains a provider quote that can be delayed/unavailable. No sample prices are used.
+
+Validation:34 tests pass, syntax/diff checks pass. Live local API returned23744.15, +1.2941%, timestamp13:41IST; browser confirmed it appears in the tile. Featured story uses real RSS headline/source with no fabricated article text or impact rating. Mobile390px has no horizontal document overflow.
