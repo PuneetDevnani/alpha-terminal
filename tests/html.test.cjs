@@ -1,0 +1,5 @@
+const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+const html=fs.readFileSync('index.html','utf8');
+test('every inline script is valid and new modules load before startup',()=>{for(const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script\s*>/gi))new vm.Script(match[1]);assert.ok(html.lastIndexOf('src="growth.js"')<html.lastIndexOf('initCloudGateAndBoot();'));assert.equal((html.match(/src="growth.js"/g)||[]).length,1);});
+test('navigation targets exist and IDs remain unique',()=>{const ids=Array.from(html.matchAll(/\bid="([^"$<>]+)"/g),m=>m[1]).filter(x=>!x.includes('{'));const counts=new Map();for(const id of ids)counts.set(id,(counts.get(id)||0)+1);for(const id of ['learning','news'])assert.equal(counts.get(id),1);for(const target of Array.from(html.matchAll(/data-tab="(\w+)"/g),m=>m[1]))assert.ok(counts.has(target),target);});
+test('successful cloud login clears persistent device-only mode',()=>{assert.equal((html.match(/localStorage.removeItem\('at_offline_mode'\);/g)||[]).length,3);});

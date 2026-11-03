@@ -66,3 +66,13 @@ Work always flows `bugfix/*` / `feature/*` → `develop` → `main`. `main` is o
 ## License
 
 See [LICENSE](./LICENSE). This is proprietary software — all rights reserved.
+
+## Learning library, news terminal, and sync review
+
+See [REVIEW.md](./REVIEW.md) for the implementation, data sources, validation, and deployment limits.
+
+- `npm run dev` — local frontend and public news API at `http://127.0.0.1:4173` (Node 20+).
+- `npm test` — persistence, conflict, parsing, import, and calculation checks.
+- `npm run check` — JavaScript syntax checks.
+
+Deploy through Cloudflare Pages with the `functions/` directory included. The news API uses public data sources and needs no provider keys. Existing Supabase `kv_store` remains the journal backend; its project must be active for cloud sync.
