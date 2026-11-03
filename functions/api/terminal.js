@@ -138,15 +138,21 @@ export async function getMacro(kind){
  return {kind,history,schedule:schedule.filter(r=>Date.parse(r.date)>Date.now()),scheduleLive,scheduleVerified:scheduleLive?new Date().toISOString():'2026-11-02',errors:results.flatMap((r,i)=>r.status==='rejected'?[MACRO_SERIES[kind][i]+': '+r.reason.message]:[]),fetchedAt:new Date().toISOString(),source:'https://www.bls.gov/news.release/'+(kind==='cpi'?'cpi':'empsit')+'.htm',scheduleSource:'https://www.bls.gov/schedule/news_release/'+(kind==='cpi'?'cpi':'empsit')+'.htm'};
 }
 
+export function normalizeCalendar(rows){
+ if(!Array.isArray(rows))throw Error('Unexpected calendar response');
+ return rows.flatMap(r=>{const date=new Date(r.date);if(!r.title||!['USD','EUR','GBP','JPY','AUD','CAD','CHF','NZD','CNY','ALL'].includes(r.country)||!Number.isFinite(date.getTime()))return [];return [{id:r.country+'|'+date.toISOString()+'|'+r.title,title:String(r.title).slice(0,250),currency:r.country,date:date.toISOString(),impact:['High','Medium','Low','Holiday'].includes(r.impact)?r.impact:'Low',actual:r.actual==null||r.actual===''?null:String(r.actual),forecast:r.forecast==null||r.forecast===''?null:String(r.forecast),previous:r.previous==null||r.previous===''?null:String(r.previous),source:'Forex Factory / Fair Economy',url:'https://www.forexfactory.com/calendar'}];}).sort((a,b)=>a.date.localeCompare(b.date));
+}
+export async function getCalendar(){const items=normalizeCalendar(await upstream('https://nfs.faireconomy.media/ff_calendar_thisweek.json'));return {items,fetchedAt:new Date().toISOString(),source:'Forex Factory weekly export',sourceUrl:'https://www.forexfactory.com/calendar',coverage:'Current provider week only. Export omits most actuals and historical series.',actualsAvailable:items.some(e=>e.actual!==null)};}
+
 export async function onRequestGet(context){
  const url=new URL(context.request.url),kind=url.searchParams.get('kind')||'headlines',market=url.searchParams.get('market');
- if(!['headlines','cot','fed','cpi','nfp'].includes(kind)||market&&!MARKETS.some(m=>m.id===market))return Response.json({error:'Unknown data request'},{status:400});
- const ttl=['cot','cpi','nfp'].includes(kind)?3600:60,cache=globalThis.caches?.default;
+ if(!['headlines','cot','fed','cpi','nfp','calendar'].includes(kind)||market&&!MARKETS.some(m=>m.id===market))return Response.json({error:'Unknown data request'},{status:400});
+ const ttl=kind==='calendar'?1800:['cot','cpi','nfp'].includes(kind)?3600:60,cache=globalThis.caches?.default;
  const key=new Request(url.origin+'/api/terminal?kind='+kind+(kind==='cot'&&market?'&market='+market:''));
  if(cache){const hit=await cache.match(key);if(hit)return hit;}
  try{
-  const data=kind==='headlines'?await getHeadlines():kind==='cot'?await getCot(market):kind==='fed'?await getFed():await getMacro(kind);
-  const hasData=kind==='headlines'?data.items.length:kind==='cot'?market?data.history.length||data.legacy.length:data.markets.some(m=>m.date):kind==='fed'?data.rate||data.meetings.length:data.history.length||data.schedule.length;
+  const data=kind==='calendar'?await getCalendar():kind==='headlines'?await getHeadlines():kind==='cot'?await getCot(market):kind==='fed'?await getFed():await getMacro(kind);
+  const hasData=kind==='calendar'?data.items.length:kind==='headlines'?data.items.length:kind==='cot'?market?data.history.length||data.legacy.length:data.markets.some(m=>m.date):kind==='fed'?data.rate||data.meetings.length:data.history.length||data.schedule.length;
   const response=Response.json(data,{status:hasData?200:503,headers:{'Cache-Control':hasData?'public, max-age='+ttl:'no-store','X-Content-Type-Options':'nosniff'}});
   if(cache&&hasData)context.waitUntil(cache.put(key,response.clone()));return response;
  }catch(error){return Response.json({error:'Market data is temporarily unavailable',detail:error.message},{status:502,headers:{'Cache-Control':'no-store'}});}
