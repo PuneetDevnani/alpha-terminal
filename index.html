@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Alpha Terminal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>try{if((localStorage.getItem("at-theme")||"dark")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch{}</script>
 <style>
 :root{
   --bg-void:#F1F3F5;
@@ -426,7 +427,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
     <div class="brand">
       <div class="brand-mark">AT</div>
       <div style="flex:1;"><div class="brand-text">ALPHA TERMINAL</div><div class="brand-sub">Trading OS</div></div>
-      <button id="themeToggle" title="Toggle dark / light theme" style="background:var(--bg-sunken);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;flex-shrink:0;">🌙</button>
+
     </div>
     <div class="nav-group-label">Overview</div>
     <button class="nav-item active" data-tab="home"><span class="ico">◈</span> Home</button>
@@ -461,7 +462,7 @@ html[data-theme="dark"] .coach-msg.user .bubble,html[data-theme="dark"] .coach-m
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
           <div class="mobile-cloud-status" id="storageIndicatorMobile"></div>
-          <div class="session-pill-row" id="pillRow"></div>
+          <div class="header-tools">      <button id="themeToggle" title="Toggle dark / light theme" style="background:var(--bg-sunken);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;flex-shrink:0;">🌙</button><div class="session-pill-row" id="pillRow"></div></div>
         </div>
       </div>
       <div id="tv-ticker-tape"></div>
@@ -5422,7 +5423,7 @@ function renderOpenPositions(){
 /* ============================================================ THEME ============================================================ */
 async function initTheme(){
   const saved = await sGet('theme');
-  const theme = saved || 'light';
+  const theme = saved || localStorage.getItem('at-theme') || 'dark';
   applyTheme(theme);
   document.getElementById('themeToggle').addEventListener('click', async ()=>{
     const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -5432,9 +5433,12 @@ async function initTheme(){
   });
 }
 function applyTheme(theme){
+  localStorage.setItem('at-theme',theme);
+  const toggle=document.getElementById('themeToggle');toggle.setAttribute('aria-label',theme==='dark'?'Switch to light theme':'Switch to dark theme');
   if(theme==='dark'){ document.documentElement.setAttribute('data-theme','dark'); document.getElementById('themeToggle').textContent='☀️'; }
   else{ document.documentElement.removeAttribute('data-theme'); document.getElementById('themeToggle').textContent='🌙'; }
   loadTickerTape();
+  if(document.getElementById('news')?.classList.contains('active')){document.querySelectorAll('#news .dashboard-widget').forEach(w=>w.remove());renderNews();}
   if(window.__marketLoaded){
     loadMarketWidgets();
     const activeSym = document.getElementById('chartTitle') ? document.getElementById('chartTitle').textContent.replace(' — Live Chart','') : 'GOLD (XAUUSD)';

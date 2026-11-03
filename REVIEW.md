@@ -66,3 +66,11 @@ Dedicated USA CPI and USA NFP monitors include 24 reference months of latest rev
 The BLS calendar endpoint denied automated retrieval locally. An explicitly labelled official schedule verified on 2026-11-02 provides a fallback through December 2027; no dates are extrapolated beyond that. A successfully retrieved live schedule takes precedence. Sources: https://www.bls.gov/schedule/news_release/cpi.htm and https://www.bls.gov/schedule/news_release/empsit.htm.
 
 Validation: 31 tests pass; syntax and diff checks pass. Local batched API returned HTTP 200 for both CPI and NFP, 24 history rows each, no series errors. Browser verified latest data, dashboard widgets and mobile 390px layout without horizontal overflow. Production remains unchanged; paused Supabase verification is still pending explicit resume approval.
+
+## Approved design integration — 3 November 2026
+
+Applied the approved Lovable design's actual OKLCH tokens, IBM Plex Sans/Mono and Fraunces typography to the existing journal rather than replacing its working trade/account flows with prototype placeholders. Theme control now appears in the top header on desktop/mobile, saves selection locally and to the existing theme collection, and applies a local theme before paint. Brighter positive/negative semantic colours match the approved prototype.
+
+Fed Watch now has a policy panel, all next-meeting outcomes with raw contract-price changes, full-width rate path with today's target band, New York meeting dates, and individual probability columns, likeliest outcome, implied rates and basis-point moves for every meeting. Missing prices remain unavailable. Added a DST-aware 24-hour session timeline and updating countdown hooks. Existing BLS CPI/NFP monitors and public feeds remain connected. Source screenshots guide information density; embedded TradingView calendar/quotes remain provider-rendered, so those panels are not exact visual copies. The feed does not provide licensed Trade Floor news or its consensus feed.
+
+31 tests and syntax/diff checks pass. Local browser checked both themes and mobile 390px with no document overflow and visible header toggle. A transient Kalshi failure was displayed correctly; direct API retry returned 10 meetings and no errors. Supabase remains paused, so live authenticated cross-device writes remain unverified.
