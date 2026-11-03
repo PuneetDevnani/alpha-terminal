@@ -34,3 +34,7 @@ html:not([data-theme="dark"]) .terminal-panel,html:not([data-theme="dark"]) .ter
 html:not([data-theme="dark"]) .terminal-panel-head{background:linear-gradient(110deg,#c9dfff,#e0edff);border-bottom-color:#7fa3d1;color:#163e76}
 html:not([data-theme="dark"]) .release-values>div,html:not([data-theme="dark"]) .fed-policy-meta>div{background:#d5e5fc;border-color:#7fa3d1}
 html:not([data-theme="dark"]) .market-tile{background:#e0ecff;border-color:#7fa3d1}
+
+/* White light-theme canvas, retaining blue accents and visible card edges. */
+html:not([data-theme="dark"]){--bg-void:#fff}
+html:not([data-theme="dark"]) body,html:not([data-theme="dark"]) .sidebar,html:not([data-theme="dark"]) .topbar{background:#fff}
